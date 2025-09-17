@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="ShopEase - Your one-stop destination for all shopping needs. Quality products at the best prices with fast delivery across India."
+    />
+    <meta name="keywords" content="ecommerce, shopping, online store, products, buy online, ShopEase" />
+    <meta name="author" content="ShopEase Team" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="ShopEase - Online Shopping Store" />
+    <meta property="og:description" content="Discover amazing products at unbeatable prices. Shop electronics, fashion, home goods and more with fast delivery." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://shopease.com" />
+    <meta property="og:image" content="%PUBLIC_URL%/og-image.jpg" />
+    
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ShopEase - Online Shopping Store" />
+    <meta name="twitter:description" content="Discover amazing products at unbeatable prices. Shop electronics, fashion, home goods and more with fast delivery." />
+    <meta name="twitter:image" content="%PUBLIC_URL%/twitter-image.jpg" />
+    
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://images.unsplash.com">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Favicon variations -->
+    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png">
+    
+    <title>ShopEase - Your Ultimate Shopping Destination</title>
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "ShopEase",
+      "description": "Online shopping store with wide range of products",
+      "url": "https://shopease.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://shopease.com/products?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    
+    <!-- Loading fallback -->
+    <div id="loading-fallback" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f9fafb; display: flex; align-items: center; justify-content: center; z-index: 9999;">
+      <div style="text-align: center;">
+        <div style="width: 50px; height: 50px; border: 4px solid #e5e7eb; border-left-color: #2563eb; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+        <p style="color: #6b7280; font-family: system-ui;">Loading ShopEase...</p>
+      </div>
+    </div>
+    
+    <style>
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      /* Hide loading fallback when React loads */
+      #root:not(:empty) + #loading-fallback {
+        display: none !important;
+      }
+    </style>
+  </body>
+</html>

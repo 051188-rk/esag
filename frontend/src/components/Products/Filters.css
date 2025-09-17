@@ -1,0 +1,138 @@
+.filters {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+  }
+  
+  .filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .filters-header h3 {
+    margin: 0;
+    color: #1f2937;
+  }
+  
+  .clear-filters {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 0.9rem;
+  }
+  
+  .filter-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  .filter-group label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+  }
+  
+  .filter-input,
+  .filter-select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+  }
+  
+  .filter-input:focus,
+  .filter-select:focus {
+    outline: none;
+    border-color: #2563eb;
+  }
+  
+  .price-ranges {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .price-range-btn {
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    background: white;
+    border-radius: 4px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s;
+  }
+  
+  .price-range-btn:hover {
+    background: #f3f4f6;
+  }
+  
+  .price-range-btn.active {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+  }
+  
+  .price-inputs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .price-input {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+  
+  .price-inputs span {
+    color: #6b7280;
+    font-size: 0.85rem;
+  }
+  
+  .apply-filters {
+    width: 100%;
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .apply-filters:hover {
+    background: #1d4ed8;
+  }
+  
+  @media (max-width: 1024px) {
+    .filters {
+      margin-top: 2rem;
+      padding: 2rem;
+    }
+    
+    .filters-header {
+      position: relative;
+    }
+    
+    .filters-header::after {
+      content: '×';
+      position: absolute;
+      top: -1rem;
+      right: -1rem;
+      font-size: 2rem;
+      cursor: pointer;
+      color: #6b7280;
+    }
+  }
+  

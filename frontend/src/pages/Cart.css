@@ -1,0 +1,239 @@
+.cart-page {
+    padding: 2rem 0;
+    min-height: 70vh;
+  }
+  
+  .cart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e5e7eb;
+  }
+  
+  .cart-header h1 {
+    color: #1f2937;
+    margin: 0;
+  }
+  
+  .clear-cart-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .clear-cart-btn:hover {
+    background: #dc2626;
+  }
+  
+  .empty-cart {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+  
+  .empty-cart-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+  
+  .empty-cart h2 {
+    color: #6b7280;
+    margin-bottom: 1rem;
+  }
+  
+  .empty-cart p {
+    color: #9ca3af;
+    margin-bottom: 2rem;
+  }
+  
+  .continue-shopping {
+    background: #2563eb;
+    color: white;
+    padding: 1rem 2rem;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: background 0.3s;
+  }
+  
+  .continue-shopping:hover {
+    background: #1d4ed8;
+  }
+  
+  .cart-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+  }
+  
+  .cart-items {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    height: fit-content;
+  }
+  
+  .cart-items h2 {
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .cart-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    height: fit-content;
+  }
+  
+  .summary-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+  
+  .summary-card h3 {
+    color: #1f2937;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    color: #374151;
+  }
+  
+  .summary-row.total {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1f2937;
+  }
+  
+  .free-delivery {
+    color: #059669;
+    font-weight: 600;
+  }
+  
+  .delivery-info {
+    background: #f0f9ff;
+    padding: 0.5rem;
+    border-radius: 6px;
+    margin: 0.5rem 0;
+    border-left: 3px solid #2563eb;
+  }
+  
+  .delivery-info small {
+    color: #2563eb;
+    font-weight: 500;
+  }
+  
+  .summary-card hr {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 1rem 0;
+  }
+  
+  .checkout-btn {
+    width: 100%;
+    background: #059669;
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+    margin: 1rem 0;
+  }
+  
+  .checkout-btn:hover {
+    background: #047857;
+  }
+  
+  .payment-methods {
+    text-align: center;
+    margin-top: 1rem;
+  }
+  
+  .payment-methods small {
+    color: #6b7280;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  
+  .payment-icons {
+    font-size: 1.5rem;
+  }
+  
+  .security-info {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .security-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .security-item span {
+    font-size: 1.5rem;
+  }
+  
+  .security-item div strong {
+    display: block;
+    color: #1f2937;
+    font-size: 0.9rem;
+  }
+  
+  .security-item div p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.8rem;
+  }
+  
+  @media (max-width: 768px) {
+    .cart-layout {
+      grid-template-columns: 1fr;
+    }
+    
+    .cart-header {
+      flex-direction: column;
+      gap: 1rem;
+      align-items: stretch;
+    }
+    
+    .security-info {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+    
+    .security-item {
+      flex: 1;
+      min-width: 120px;
+      flex-direction: column;
+      text-align: center;
+    }
+  }
+  
