@@ -10,6 +10,8 @@ router.post('/', orderController.createOrder);
 router.get('/', orderController.getUserOrders);
 router.get('/:id', orderController.getOrderById);
 
+router.post('/track', orderController.trackOrder);
+
 // New routes for payment and cancellation
 router.put('/:id/payment', orderController.confirmPayment);
 router.put('/:id/cancel', orderController.cancelOrder);

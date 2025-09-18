@@ -1,9 +1,10 @@
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
+const { generateOrderStatusUpdate } = require('../utils/aiService');
 
 // Create a new order
-exports.createOrder = async (req, res) => {
+const createOrder = async (req, res) => {
   try {
     const { shipping_address, payment_method } = req.body;
 
@@ -74,7 +75,7 @@ exports.createOrder = async (req, res) => {
 };
 
 // Confirm dummy payment
-exports.confirmPayment = async (req, res) => {
+const confirmPayment = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: 'Order not found' });
@@ -100,7 +101,7 @@ exports.confirmPayment = async (req, res) => {
 };
 
 // Cancel an order
-exports.cancelOrder = async (req, res) => {
+const cancelOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate('items.product');
     if (!order) return res.status(404).json({ message: 'Order not found' });
@@ -108,7 +109,6 @@ exports.cancelOrder = async (req, res) => {
       return res.status(403).json({ message: 'Access denied' });
     }
 
-    // Check if order is cancellable
     if (['shipped', 'delivered', 'cancelled'].includes(order.order_status)) {
       return res.status(400).json({ message: `Cannot cancel an order that is already ${order.order_status}` });
     }
@@ -130,9 +130,8 @@ exports.cancelOrder = async (req, res) => {
   }
 };
 
-
 // Get all orders for a user
-exports.getUserOrders = async (req, res) => {
+const getUserOrders = async (req, res) => {
   try {
     const orders = await Order.find({ user: req.user._id })
       .sort({ createdAt: -1 })
@@ -144,7 +143,7 @@ exports.getUserOrders = async (req, res) => {
 };
 
 // Get a single order by ID
-exports.getOrderById = async (req, res) => {
+const getOrderById = async (req, res) => {
   try {
     const order = await Order.findOne({ _id: req.params.id, user: req.user._id })
       .populate('user', 'name email phone')
@@ -161,7 +160,7 @@ exports.getOrderById = async (req, res) => {
 };
 
 // Update order status (for admins)
-exports.updateOrderStatus = async (req, res) => {
+const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
     const order = await Order.findByIdAndUpdate(
@@ -178,4 +177,42 @@ exports.updateOrderStatus = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
+};
+
+// Track order for chatbot
+const trackOrder = async (req, res) => {
+    try {
+      const { orderId } = req.body;
+      if (!orderId) {
+        return res.status(400).json({ message: 'Order ID is required.' });
+      }
+  
+      const order = await Order.findOne({ order_id: orderId.trim() });
+  
+      if (!order) {
+        return res.status(404).json({ message: "Sorry, I couldn't find an order with that ID. Please double-check and try again." });
+      }
+  
+      if (order.user.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: "This order ID doesn't seem to belong to your account." });
+      }
+  
+      const statusUpdate = await generateOrderStatusUpdate(order);
+  
+      res.json({ message: statusUpdate });
+  
+    } catch (error) {
+      console.error('Track order error:', error);
+      res.status(500).json({ message: 'I seem to be having some trouble right now. Please try again in a moment.' });
+    }
+};
+
+module.exports = {
+  createOrder,
+  confirmPayment,
+  cancelOrder,
+  getUserOrders,
+  getOrderById,
+  updateOrderStatus,
+  trackOrder,
 };

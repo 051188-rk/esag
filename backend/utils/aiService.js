@@ -50,4 +50,42 @@ async function parseSearchQuery(query) {
   }
 }
 
-module.exports = { parseSearchQuery };
+async function generateOrderStatusUpdate(order) {
+  const prompt = `
+    You are a friendly and helpful e-commerce customer support chatbot.
+    Your task is to provide a clear and concise status update for a customer's order based on the JSON data provided.
+    Be conversational and reassuring.
+
+    Order Data:
+    ${JSON.stringify(order, null, 2)}
+
+    Based on the data, generate a response that includes:
+    1.  A greeting.
+    2.  The current status of the order in a friendly tone.
+    3.  A summary of the items in the order (just the names and quantities).
+    4.  The estimated delivery date.
+    5.  Confirmation of the shipping address (city and pincode).
+
+    Example Response for an 'out_for_delivery' order:
+    "Great news! Your order #${order.order_id} is out for delivery and should arrive soon. It's heading to ${order.shipping_address.city} - ${order.shipping_address.pincode}.
+    
+    Here's a reminder of what's in the box:
+    - ${order.items.map(item => `${item.quantity} x ${item.name}`).join('\n- ')}
+
+    Your package is expected to be delivered by ${new Date(order.estimated_delivery_date).toDateString()}. We're so excited for you to receive it!"
+    
+    Now, generate a similar response for the provided order data.
+  `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error("Error generating order status update with AI:", error);
+    // Fallback to a simple, non-AI response if the API fails
+    return `Your order #${order.order_id} is currently ${order.order_status}. It is expected to be delivered by ${new Date(order.estimated_delivery_date).toDateString()}.`;
+  }
+}
+
+module.exports = { parseSearchQuery, generateOrderStatusUpdate };
