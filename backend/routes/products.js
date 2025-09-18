@@ -10,5 +10,6 @@ router.get('/subcategories', productController.getSubcategories);
 router.get('/brands', productController.getBrands);
 router.get('/featured', productController.getFeaturedProducts);
 router.get('/:id', productController.getProductById);
+router.post('/smart-search', productController.smartSearch);
 
 module.exports = router;

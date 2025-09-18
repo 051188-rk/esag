@@ -1,4 +1,5 @@
 const Product = require('../models/Product');
+const { parseSearchQuery } = require('../utils/aiService');
 
 const getAllProducts = async (req, res) => {
   try {
@@ -252,6 +253,49 @@ const getProductById = async (req, res) => {
   };
 
 
+  const smartSearch = async (req, res) => {
+    const { query } = req.body;
+  
+    if (!query) {
+      return res.status(400).json({ message: 'Search query is required.' });
+    }
+  
+    try {
+      // 1. Parse the natural language query using the AI service
+      const parsedQuery = await parseSearchQuery(query);
+      
+      // 2. Handle the "addToCart" intent separately
+      if (parsedQuery.intent === 'addToCart') {
+        const product = await Product.findOne({
+          name: { $regex: new RegExp(parsedQuery.product, 'i') }
+        });
+  
+        if (!product) {
+          return res.status(404).json({ message: `Product "${parsedQuery.product}" not found.` });
+        }
+  
+        return res.json({
+          intent: 'addToCart',
+          product: product,
+          quantity: parsedQuery.quantity || 1
+        });
+      }
+  
+      // 3. For "search" intent, return the parsed filter object
+      // The frontend will use this to build the URL and navigate.
+      res.json({
+        intent: 'search',
+        filters: parsedQuery
+      });
+  
+    } catch (error) {
+      console.error('Smart search error:', error);
+      res.status(500).json({ message: 'Failed to perform smart search.' });
+    }
+  };
+
+
+
 // Export all functions properly
 module.exports = {
   getAllProducts,
@@ -260,4 +304,5 @@ module.exports = {
   getSubcategories,
   getBrands,
   getFeaturedProducts,
+  smartSearch,
 };

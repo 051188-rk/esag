@@ -100,4 +100,18 @@
       display: flex;
     }
   }
+
+  .smart-search-btn {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    line-height: 1;
+    transition: transform 0.3s;
+  }
+  
+  .smart-search-btn:hover {
+    transform: scale(1.2);
+  }
   
