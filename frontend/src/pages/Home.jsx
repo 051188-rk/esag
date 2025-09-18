@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from 'react-query';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import Slider from 'react-slick';
 import api from '../services/api';
 import ProductCard from '../components/Products/ProductCard';
@@ -8,16 +9,36 @@ import Loading from '../components/Common/Loading';
 import './Home.css';
 
 const Home = () => {
-  const { data: featuredProducts, isLoading: featuredLoading } = useQuery(
+  const { data: featuredData, isLoading: featuredLoading, error: featuredError } = useQuery(
     'featured-products',
-    () => api.get('/products/featured').then(res => res.data),
-    { staleTime: 300000 }
+    async () => {
+      const response = await api.get('/products/featured');
+      console.log('Featured API response:', response.data);
+      return response.data;
+    },
+    { 
+      staleTime: 5 * 60 * 1000,
+      onError: (error) => {
+        console.error('Featured products error:', error);
+        toast.error('Failed to load featured products');
+      }
+    }
   );
 
-  const { data: categories, isLoading: categoriesLoading } = useQuery(
+  const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = useQuery(
     'categories',
-    () => api.get('/products/categories').then(res => res.data),
-    { staleTime: 300000 }
+    async () => {
+      const response = await api.get('/products/categories');
+      console.log('Categories API response:', response.data);
+      return response.data;
+    },
+    { 
+      staleTime: 5 * 60 * 1000,
+      onError: (error) => {
+        console.error('Categories error:', error);
+        toast.error('Failed to load categories');
+      }
+    }
   );
 
   const sliderSettings = {
@@ -32,22 +53,31 @@ const Home = () => {
 
   const productSliderSettings = {
     dots: false,
-    infinite: true,
+    infinite: featuredData?.products?.length > 4,
     speed: 500,
-    slidesToShow: 4,
+    slidesToShow: Math.min(4, featuredData?.products?.length || 1),
     slidesToScroll: 1,
     responsive: [
       {
         breakpoint: 1024,
-        settings: { slidesToShow: 3 }
+        settings: { 
+          slidesToShow: Math.min(3, featuredData?.products?.length || 1),
+          infinite: featuredData?.products?.length > 3
+        }
       },
       {
         breakpoint: 768,
-        settings: { slidesToShow: 2 }
+        settings: { 
+          slidesToShow: Math.min(2, featuredData?.products?.length || 1),
+          infinite: featuredData?.products?.length > 2
+        }
       },
       {
         breakpoint: 480,
-        settings: { slidesToShow: 1 }
+        settings: { 
+          slidesToShow: 1,
+          infinite: featuredData?.products?.length > 1
+        }
       }
     ]
   };
@@ -79,9 +109,12 @@ const Home = () => {
     }
   ];
 
-  if (featuredLoading || categoriesLoading) {
-    return <Loading />;
-  }
+  // Safely extract arrays from API responses
+  const featuredProducts = featuredData?.products || [];
+  const categories = categoriesData?.categories || [];
+
+  console.log('Extracted featured products:', featuredProducts);
+  console.log('Extracted categories:', categories);
 
   return (
     <div className="home">
@@ -113,18 +146,26 @@ const Home = () => {
       <section className="categories-section">
         <div className="container">
           <h2>Shop by Category</h2>
-          <div className="categories-grid">
-            {categories?.slice(0, 8).map(category => (
-              <Link 
-                key={category.name}
-                to={`/products?category=${category.name}`}
-                className="category-card"
-              >
-                <h3>{category.name}</h3>
-                <span>{category.count} products</span>
-              </Link>
-            ))}
-          </div>
+          {categoriesLoading ? (
+            <Loading size="medium" />
+          ) : categoriesError ? (
+            <p>Unable to load categories</p>
+          ) : Array.isArray(categories) && categories.length > 0 ? (
+            <div className="categories-grid">
+              {categories.slice(0, 8).map(category => (
+                <Link 
+                  key={category.name}
+                  to={`/products?category=${encodeURIComponent(category.name)}`}
+                  className="category-card"
+                >
+                  <h3>{category.name}</h3>
+                  <span>{category.count} products</span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p>No categories available</p>
+          )}
         </div>
       </section>
 
@@ -132,13 +173,21 @@ const Home = () => {
       <section className="featured-section">
         <div className="container">
           <h2>Featured Products</h2>
-          <Slider {...productSliderSettings}>
-            {featuredProducts?.map(product => (
-              <div key={product._id} className="product-slide">
-                <ProductCard product={product} />
-              </div>
-            ))}
-          </Slider>
+          {featuredLoading ? (
+            <Loading size="medium" />
+          ) : featuredError ? (
+            <p>Unable to load featured products</p>
+          ) : Array.isArray(featuredProducts) && featuredProducts.length > 0 ? (
+            <Slider {...productSliderSettings}>
+              {featuredProducts.map(product => (
+                <div key={product._id} className="product-slide">
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </Slider>
+          ) : (
+            <p>No featured products available</p>
+          )}
         </div>
       </section>
 

@@ -6,22 +6,41 @@ import './Filters.css';
 const Filters = ({ filters, onFilterChange, onClearFilters }) => {
   const [localFilters, setLocalFilters] = useState(filters);
 
-  const { data: categories } = useQuery(
+  const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = useQuery(
     'categories',
-    () => api.get('/products/categories').then(res => res.data)
+    async () => {
+      const response = await api.get('/products/categories');
+      return response.data;
+    },
+    { 
+      staleTime: 5 * 60 * 1000,
+      onError: (error) => {
+        console.error('Categories fetch error:', error);
+      }
+    }
   );
 
-  const { data: brands } = useQuery(
+  const { data: brandsData, isLoading: brandsLoading } = useQuery(
     'brands',
-    () => api.get('/products/brands').then(res => res.data)
+    async () => {
+      const response = await api.get('/products/brands');
+      return response.data;
+    },
+    { staleTime: 5 * 60 * 1000 }
   );
 
-  const { data: subcategories } = useQuery(
+  const { data: subcategoriesData } = useQuery(
     ['subcategories', localFilters.category],
-    () => api.get('/products/subcategories', { 
-      params: { category: localFilters.category }
-    }).then(res => res.data),
-    { enabled: !!localFilters.category }
+    async () => {
+      const response = await api.get('/products/subcategories', { 
+        params: { category: localFilters.category }
+      });
+      return response.data;
+    },
+    { 
+      enabled: !!localFilters.category,
+      staleTime: 5 * 60 * 1000
+    }
   );
 
   useEffect(() => {
@@ -48,6 +67,14 @@ const Filters = ({ filters, onFilterChange, onClearFilters }) => {
     setLocalFilters(prev => ({ ...prev, ...clearedFilters }));
     onClearFilters();
   };
+
+  // Extract arrays from API responses safely
+  const categories = categoriesData?.categories || [];
+  const brands = brandsData?.brands || [];
+  const subcategories = subcategoriesData?.subcategories || [];
+
+  console.log('Categories data:', categoriesData);
+  console.log('Categories array:', categories);
 
   const priceRanges = [
     { label: 'Under ₹500', min: '', max: 500 },
@@ -81,25 +108,31 @@ const Filters = ({ filters, onFilterChange, onClearFilters }) => {
       {/* Categories */}
       <div className="filter-group">
         <label>Category</label>
-        <select
-          value={localFilters.category}
-          onChange={(e) => {
-            handleInputChange('category', e.target.value);
-            handleInputChange('subcategory', ''); // Reset subcategory
-          }}
-          className="filter-select"
-        >
-          <option value="">All Categories</option>
-          {categories?.map(category => (
-            <option key={category.name} value={category.name}>
-              {category.name} ({category.count})
-            </option>
-          ))}
-        </select>
+        {categoriesLoading ? (
+          <div>Loading categories...</div>
+        ) : categoriesError ? (
+          <div>Error loading categories</div>
+        ) : (
+          <select
+            value={localFilters.category}
+            onChange={(e) => {
+              handleInputChange('category', e.target.value);
+              handleInputChange('subcategory', ''); // Reset subcategory
+            }}
+            className="filter-select"
+          >
+            <option value="">All Categories</option>
+            {Array.isArray(categories) && categories.map(category => (
+              <option key={category.name} value={category.name}>
+                {category.name} ({category.count})
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* Subcategories */}
-      {localFilters.category && subcategories?.length > 0 && (
+      {localFilters.category && Array.isArray(subcategories) && subcategories.length > 0 && (
         <div className="filter-group">
           <label>Subcategory</label>
           <select
@@ -120,18 +153,22 @@ const Filters = ({ filters, onFilterChange, onClearFilters }) => {
       {/* Brands */}
       <div className="filter-group">
         <label>Brand</label>
-        <select
-          value={localFilters.brand}
-          onChange={(e) => handleInputChange('brand', e.target.value)}
-          className="filter-select"
-        >
-          <option value="">All Brands</option>
-          {brands?.slice(0, 20).map(brand => (
-            <option key={brand} value={brand}>
-              {brand}
-            </option>
-          ))}
-        </select>
+        {brandsLoading ? (
+          <div>Loading brands...</div>
+        ) : (
+          <select
+            value={localFilters.brand}
+            onChange={(e) => handleInputChange('brand', e.target.value)}
+            className="filter-select"
+          >
+            <option value="">All Brands</option>
+            {Array.isArray(brands) && brands.slice(0, 20).map(brand => (
+              <option key={brand} value={brand}>
+                {brand}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* Price Range - Quick Select */}

@@ -1,6 +1,6 @@
 const Product = require('../models/Product');
 
-exports.getAllProducts = async (req, res) => {
+const getAllProducts = async (req, res) => {
   try {
     const {
       page = 1,
@@ -12,113 +12,252 @@ exports.getAllProducts = async (req, res) => {
       maxPrice,
       search,
       sortBy = 'createdAt',
-      sortOrder = 'desc',
-      featured
+      sortOrder = 'desc'
     } = req.query;
 
-    // Build filter object
-    const filter = { is_active: true };
+    console.log('=== PRODUCTS QUERY DEBUG ===');
+    console.log('Query params:', req.query);
+    
+    // REMOVE is_active filter temporarily to see all products
+    const filter = {};
 
-    if (category) filter.category = { $regex: category, $options: 'i' };
-    if (subcategory) filter.subcategory = { $regex: subcategory, $options: 'i' };
-    if (brand) filter.brand = { $regex: brand, $options: 'i' };
-    if (featured) filter.is_featured = featured === 'true';
-
-    if (minPrice || maxPrice) {
-      filter.price = {};
-      if (minPrice) filter.price.$gte = parseInt(minPrice);
-      if (maxPrice) filter.price.$lte = parseInt(maxPrice);
+    if (category && category !== '') {
+      filter.category = { $regex: new RegExp(category, 'i') };
+    }
+    
+    if (subcategory && subcategory !== '') {
+      filter.subcategory = { $regex: new RegExp(subcategory, 'i') };
+    }
+    
+    if (brand && brand !== '') {
+      filter.brand = { $regex: new RegExp(brand, 'i') };
     }
 
-    if (search) {
+    // Price range filter
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice && !isNaN(minPrice)) {
+        filter.price.$gte = parseFloat(minPrice);
+      }
+      if (maxPrice && !isNaN(maxPrice)) {
+        filter.price.$lte = parseFloat(maxPrice);
+      }
+    }
+
+    // Search filter
+    if (search && search.trim() !== '') {
+      const searchRegex = new RegExp(search.trim(), 'i');
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { brand: { $regex: search, $options: 'i' } },
-        { tags: { $in: [new RegExp(search, 'i')] } }
+        { name: searchRegex },
+        { description: searchRegex },
+        { brand: searchRegex }
       ];
     }
 
+    console.log('Filter:', JSON.stringify(filter, null, 2));
+
     // Sort object
     const sort = {};
-    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+    sort[sortBy || 'createdAt'] = sortOrder === 'asc' ? 1 : -1;
 
+    // Pagination
+    const pageNum = Math.max(1, parseInt(page));
+    const limitNum = Math.max(1, Math.min(50, parseInt(limit)));
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count first
+    const totalCount = await Product.countDocuments(filter);
+    console.log('Total count:', totalCount);
+
+    // Get products
     const products = await Product.find(filter)
       .sort(sort)
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .exec();
+      .skip(skip)
+      .limit(limitNum)
+      .lean();
 
-    const total = await Product.countDocuments(filter);
+    console.log('Found products:', products.length);
+
+    const totalPages = Math.ceil(totalCount / limitNum);
 
     res.json({
+      success: true,
       products,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
-      total,
-      hasMore: page < Math.ceil(total / limit)
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        total: totalCount,
+        limit: limitNum,
+        hasMore: pageNum < totalPages,
+        hasPrev: pageNum > 1
+      }
+    });
+
+  } catch (error) {
+    console.error('Products error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
+
+const getFeaturedProducts = async (req, res) => {
+  try {
+    // Get latest products instead of featured for now
+    const products = await Product.find({})
+      .sort({ createdAt: -1 })
+      .limit(8)
+      .lean();
+    
+    console.log('Featured products found:', products.length);
+    
+    res.json({
+      success: true,
+      products
     });
   } catch (error) {
-    console.error('Get products error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Featured products error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message
+    });
   }
 };
 
-exports.getProductById = async (req, res) => {
+const getCategories = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    if (!product || !product.is_active) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-    res.json(product);
+    const categories = await Product.aggregate([
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $project: { name: '$_id', count: 1, _id: 0 } },
+      { $sort: { name: 1 } }
+    ]);
+    
+    console.log('Categories found:', categories.length);
+    
+    res.json({
+      success: true,
+      categories
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Categories error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message
+    });
   }
 };
 
-exports.getCategories = async (req, res) => {
-  try {
-    const categories = await Product.distinct('category');
-    const categoriesWithCount = await Promise.all(
-      categories.map(async (category) => {
-        const count = await Product.countDocuments({ category, is_active: true });
-        return { name: category, count };
-      })
-    );
-    res.json(categoriesWithCount);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-exports.getSubcategories = async (req, res) => {
+const getSubcategories = async (req, res) => {
   try {
     const { category } = req.query;
-    const filter = category ? { category, is_active: true } : { is_active: true };
-    const subcategories = await Product.distinct('subcategory', filter);
-    res.json(subcategories);
+    const match = {};
+    
+    if (category && category !== '') {
+      match.category = { $regex: new RegExp(category, 'i') };
+    }
+    
+    const subcategories = await Product.distinct('subcategory', match);
+    
+    res.json({
+      success: true,
+      subcategories: subcategories.sort()
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Get subcategories error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error while fetching subcategories' 
+    });
   }
 };
 
-exports.getBrands = async (req, res) => {
+const getBrands = async (req, res) => {
   try {
-    const brands = await Product.distinct('brand', { is_active: true });
-    res.json(brands.sort());
+    const brands = await Product.distinct('brand');
+    res.json({
+      success: true,
+      brands: brands.sort()
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Get brands error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error while fetching brands' 
+    });
   }
 };
 
-exports.getFeaturedProducts = async (req, res) => {
-  try {
-    const products = await Product.find({ 
-      is_featured: true, 
-      is_active: true 
-    }).limit(8);
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
+const getProductById = async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      console.log('Getting product by ID:', id);
+      
+      // Validate MongoDB ObjectId format
+      if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Invalid product ID format' 
+        });
+      }
+  
+      // Find product by ID
+      const product = await Product.findById(id).lean();
+      
+      console.log('Found product:', product ? 'Yes' : 'No');
+      
+      if (!product) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'Product not found' 
+        });
+      }
+      
+      // Ensure all required fields have default values
+      const productWithDefaults = {
+        ...product,
+        name: product.name || 'Product Name Not Available',
+        brand: product.brand || 'Unknown Brand',
+        description: product.description || 'No description available',
+        price: product.price || 0,
+        original_price: product.original_price || product.price || 0,
+        stock_quantity: product.stock_quantity || 0,
+        rating: product.rating || 0,
+        review_count: product.review_count || 0,
+        color_options: product.color_options || [],
+        size_options: product.size_options || [],
+        specifications: product.specifications || {},
+        image_url: product.image_url || 'https://via.placeholder.com/500x500?text=No+Image',
+        category: product.category || 'Unknown',
+        subcategory: product.subcategory || 'Unknown'
+      };
+      
+      console.log('Returning product with defaults:', productWithDefaults.name);
+      
+      res.json({
+        success: true,
+        product: productWithDefaults
+      });
+    } catch (error) {
+      console.error('Get product by ID error:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Server error while fetching product',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  };
+
+
+// Export all functions properly
+module.exports = {
+  getAllProducts,
+  getProductById,
+  getCategories,
+  getSubcategories,
+  getBrands,
+  getFeaturedProducts,
 };

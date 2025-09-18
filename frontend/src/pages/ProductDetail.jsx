@@ -19,10 +19,21 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
 
-  const { data: product, isLoading, error } = useQuery(
+  const { data: productData, isLoading, error } = useQuery(
     ['product', id],
-    () => api.get(`/products/${id}`).then(res => res.data),
-    { staleTime: 300000 }
+    async () => {
+      console.log('Fetching product with ID:', id);
+      const response = await api.get(`/products/${id}`);
+      console.log('Product API response:', response.data);
+      return response.data;
+    },
+    { 
+      staleTime: 300000,
+      onError: (error) => {
+        console.error('Product fetch error:', error);
+        toast.error('Failed to load product details');
+      }
+    }
   );
 
   const handleAddToCart = async () => {
@@ -54,7 +65,22 @@ const ProductDetail = () => {
 
   if (isLoading) return <Loading size="large" />;
   
-  if (error || !product) {
+  if (error || !productData?.success) {
+    return (
+      <div className="error-container">
+        <h2>Product not found</h2>
+        <p>{error?.message || 'The product you\'re looking for doesn\'t exist.'}</p>
+        <button onClick={() => navigate('/products')}>
+          Back to Products
+        </button>
+      </div>
+    );
+  }
+
+  // Extract product from API response
+  const product = productData.product;
+  
+  if (!product) {
     return (
       <div className="error-container">
         <h2>Product not found</h2>
@@ -65,8 +91,16 @@ const ProductDetail = () => {
     );
   }
 
-  const discountPercentage = Math.round(((product.original_price - product.price) / product.original_price) * 100);
-  const images = [product.image_url, ...(product.additional_images || [])];
+  // Safe calculations with fallbacks
+  const currentPrice = Number(product.price) || 0;
+  const originalPrice = Number(product.original_price) || currentPrice;
+  const discountPercentage = originalPrice > currentPrice ? 
+    Math.round(((originalPrice - currentPrice) / originalPrice) * 100) : 0;
+  const stockQuantity = Number(product.stock_quantity) || 0;
+  const rating = Number(product.rating) || 0;
+  const reviewCount = Number(product.review_count) || 0;
+
+  const images = [product.image_url, ...(product.additional_images || [])].filter(Boolean);
 
   return (
     <div className="product-detail">
@@ -76,8 +110,8 @@ const ProductDetail = () => {
           <div className="product-images">
             <div className="main-image">
               <img 
-                src={images[activeImage]} 
-                alt={product.name}
+                src={images[activeImage] || product.image_url || 'https://via.placeholder.com/500x500?text=No+Image'} 
+                alt={product.name || 'Product'}
                 onError={(e) => {
                   e.target.src = 'https://via.placeholder.com/500x500?text=No+Image';
                 }}
@@ -108,41 +142,43 @@ const ProductDetail = () => {
           {/* Product Info */}
           <div className="product-info">
             <div className="product-header">
-              <h1>{product.name}</h1>
-              <p className="brand">Brand: {product.brand}</p>
+              <h1>{product.name || 'Product Name Not Available'}</h1>
+              <p className="brand">Brand: {product.brand || 'Unknown Brand'}</p>
               <div className="category-path">
-                {product.category} › {product.subcategory}
+                {product.category || 'Category'} › {product.subcategory || 'Subcategory'}
               </div>
             </div>
 
             <div className="product-rating">
               <div className="stars">
-                {'★'.repeat(Math.floor(product.rating || 0))}
-                {'☆'.repeat(5 - Math.floor(product.rating || 0))}
+                {'★'.repeat(Math.floor(rating))}
+                {'☆'.repeat(5 - Math.floor(rating))}
               </div>
               <span className="rating-text">
-                ({product.rating?.toFixed(1) || '0.0'}) • {product.review_count} reviews
+                ({rating.toFixed(1)}) • {reviewCount} reviews
               </span>
             </div>
 
             <div className="product-pricing">
-              <span className="current-price">₹{product.price?.toLocaleString()}</span>
-              {product.original_price > product.price && (
-                <span className="original-price">₹{product.original_price?.toLocaleString()}</span>
+              <span className="current-price">₹{currentPrice.toLocaleString()}</span>
+              {originalPrice > currentPrice && (
+                <span className="original-price">₹{originalPrice.toLocaleString()}</span>
               )}
-              <span className="savings">
-                You save ₹{(product.original_price - product.price)?.toLocaleString()} 
-                ({discountPercentage}%)
-              </span>
+              {discountPercentage > 0 && (
+                <span className="savings">
+                  You save ₹{(originalPrice - currentPrice).toLocaleString()} 
+                  ({discountPercentage}%)
+                </span>
+              )}
             </div>
 
             <div className="product-description">
               <h3>Description</h3>
-              <p>{product.description}</p>
+              <p>{product.description || 'No description available for this product.'}</p>
             </div>
 
             {/* Product Options */}
-            {product.color_options && product.color_options.length > 0 && (
+            {Array.isArray(product.color_options) && product.color_options.length > 0 && (
               <div className="product-options">
                 <h4>Color:</h4>
                 <div className="color-options">
@@ -159,7 +195,7 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {product.size_options && product.size_options.length > 0 && (
+            {Array.isArray(product.size_options) && product.size_options.length > 0 && (
               <div className="product-options">
                 <h4>Size:</h4>
                 <div className="size-options">
@@ -188,15 +224,15 @@ const ProductDetail = () => {
                 </button>
                 <span>{quantity}</span>
                 <button 
-                  onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}
-                  disabled={quantity >= product.stock_quantity}
+                  onClick={() => setQuantity(Math.min(stockQuantity, quantity + 1))}
+                  disabled={quantity >= stockQuantity || stockQuantity <= 0}
                 >
                   +
                 </button>
               </div>
               <span className="stock-info">
-                {product.stock_quantity > 0 ? (
-                  `${product.stock_quantity} in stock`
+                {stockQuantity > 0 ? (
+                  `${stockQuantity} in stock`
                 ) : (
                   'Out of stock'
                 )}
@@ -208,21 +244,22 @@ const ProductDetail = () => {
               <button 
                 className="add-to-cart-btn"
                 onClick={handleAddToCart}
-                disabled={product.stock_quantity === 0}
+                disabled={stockQuantity === 0}
               >
                 Add to Cart
               </button>
               <button 
                 className="buy-now-btn"
                 onClick={handleBuyNow}
-                disabled={product.stock_quantity === 0}
+                disabled={stockQuantity === 0}
               >
                 Buy Now
               </button>
             </div>
 
             {/* Specifications */}
-            {product.specifications && Object.keys(product.specifications).length > 0 && (
+            {product.specifications && typeof product.specifications === 'object' && 
+             Object.keys(product.specifications).length > 0 && (
               <div className="product-specifications">
                 <h3>Specifications</h3>
                 <div className="specs-grid">

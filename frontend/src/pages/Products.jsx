@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import { useSearchParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import api from '../services/api';
 import ProductCard from '../components/Products/ProductCard';
 import Filters from '../components/Products/Filters';
@@ -12,6 +13,7 @@ const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState({
     page: parseInt(searchParams.get('page')) || 1,
+    limit: 12,
     category: searchParams.get('category') || '',
     subcategory: searchParams.get('subcategory') || '',
     brand: searchParams.get('brand') || '',
@@ -24,22 +26,40 @@ const Products = () => {
 
   const [showFilters, setShowFilters] = useState(false);
 
+  // Update URL when filters change
   useEffect(() => {
     const params = new URLSearchParams();
     Object.keys(filters).forEach(key => {
-      if (filters[key]) {
+      if (filters[key] && filters[key] !== '') {
         params.set(key, filters[key]);
       }
     });
     setSearchParams(params);
   }, [filters, setSearchParams]);
 
-  const { data, isLoading, error } = useQuery(
+  // Fetch products with React Query
+  const { 
+    data, 
+    isLoading, 
+    error, 
+    isError 
+  } = useQuery(
     ['products', filters],
-    () => api.get('/products', { params: filters }).then(res => res.data),
+    async () => {
+      console.log('Fetching products with filters:', filters);
+      const response = await api.get('/products', { params: filters });
+      console.log('Products API response:', response.data);
+      return response.data;
+    },
     { 
       keepPreviousData: true,
-      staleTime: 300000
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      retry: 3,
+      onError: (error) => {
+        console.error('Products fetch error:', error);
+        toast.error('Failed to load products: ' + (error.message || 'Unknown error'));
+      }
     }
   );
 
@@ -49,12 +69,13 @@ const Products = () => {
 
   const handlePageChange = (page) => {
     setFilters(prev => ({ ...prev, page }));
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const clearFilters = () => {
     setFilters({
       page: 1,
+      limit: 12,
       category: '',
       subcategory: '',
       brand: '',
@@ -66,14 +87,25 @@ const Products = () => {
     });
   };
 
-  if (error) {
+  if (isError) {
     return (
-      <div className="error-container">
-        <h2>Error loading products</h2>
-        <p>Please try again later.</p>
+      <div className="products-page">
+        <div className="container">
+          <div className="error-container">
+            <h2>Error loading products</h2>
+            <p>{error.message || 'Please try again later.'}</p>
+            <button onClick={() => window.location.reload()}>
+              Retry
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
+
+  // Extract products and pagination from response
+  const products = data?.products || [];
+  const pagination = data?.pagination || {};
 
   return (
     <div className="products-page">
@@ -109,7 +141,9 @@ const Products = () => {
         {filters.search && (
           <div className="search-results-info">
             <p>Search results for "<strong>{filters.search}</strong>"</p>
-            {data && <span>({data.total} products found)</span>}
+            {pagination.total !== undefined && (
+              <span>({pagination.total} products found)</span>
+            )}
           </div>
         )}
 
@@ -127,20 +161,29 @@ const Products = () => {
               <Loading size="large" />
             ) : (
               <>
-                {data?.products?.length > 0 ? (
+                {products && products.length > 0 ? (
                   <>
+                    <div className="products-info">
+                      <p>
+                        Showing {products.length} of {pagination.total || 0} products
+                        {pagination.currentPage > 1 && ` (Page ${pagination.currentPage})`}
+                      </p>
+                    </div>
+                    
                     <div className="products-grid">
-                      {data.products.map(product => (
+                      {products.map(product => (
                         <ProductCard key={product._id} product={product} />
                       ))}
                     </div>
                     
-                    <Pagination
-                      currentPage={data.currentPage}
-                      totalPages={data.totalPages}
-                      onPageChange={handlePageChange}
-                      hasMore={data.hasMore}
-                    />
+                    {pagination.totalPages > 1 && (
+                      <Pagination
+                        currentPage={pagination.currentPage}
+                        totalPages={pagination.totalPages}
+                        onPageChange={handlePageChange}
+                        hasMore={pagination.hasMore}
+                      />
+                    )}
                   </>
                 ) : (
                   <div className="no-products">

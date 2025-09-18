@@ -3,6 +3,7 @@ const productController = require('../controllers/productController');
 
 const router = express.Router();
 
+// Make sure all these functions exist in the controller
 router.get('/', productController.getAllProducts);
 router.get('/categories', productController.getCategories);
 router.get('/subcategories', productController.getSubcategories);
