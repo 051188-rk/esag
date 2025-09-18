@@ -14,8 +14,8 @@ exports.createOrder = async (req, res) => {
     // Validate stock availability
     for (const item of cart.items) {
       if (item.product.stock_quantity < item.quantity) {
-        return res.status(400).json({ 
-          message: `Insufficient stock for ${item.product.name}` 
+        return res.status(400).json({
+          message: `Insufficient stock for ${item.product.name}`
         });
       }
     }
@@ -47,7 +47,7 @@ exports.createOrder = async (req, res) => {
       cod_fee,
       shipping_fee,
       total_amount,
-      payment_status: payment_method === 'cod' ? 'pending' : 'paid'
+      payment_status: 'pending' // Corrected: Always pending initially
     });
 
     await order.save();
@@ -65,7 +65,8 @@ exports.createOrder = async (req, res) => {
     await cart.save();
 
     await order.populate('user', 'name email phone');
-    
+
+    console.log("Order created successfully:", order); // Added for debugging
     res.status(201).json(order);
   } catch (error) {
     console.error('Create order error:', error);
@@ -78,7 +79,7 @@ exports.getUserOrders = async (req, res) => {
     const orders = await Order.find({ user: req.user._id })
       .sort({ createdAt: -1 })
       .populate('items.product', 'name image_url');
-    
+
     res.json(orders);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
@@ -90,7 +91,7 @@ exports.getOrderById = async (req, res) => {
     const order = await Order.findById(req.params.id)
       .populate('user', 'name email phone')
       .populate('items.product', 'name image_url brand');
-    
+
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
@@ -99,7 +100,7 @@ exports.getOrderById = async (req, res) => {
     if (order.user._id.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Access denied' });
     }
-    
+
     res.json(order);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });

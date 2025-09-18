@@ -28,8 +28,8 @@ const orderSchema = new mongoose.Schema({
   },
   order_id: {
     type: String,
-    unique: true,
-    required: true
+    unique: true
+    // required: true, // This line was causing the error
   },
   items: [orderItemSchema],
   shipping_address: {

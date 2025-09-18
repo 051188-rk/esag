@@ -82,8 +82,8 @@ const Orders = () => {
         ) : (
           <div className="orders-list">
             {orders.map(order => (
-              <div 
-                key={order._id} 
+              <div
+                key={order._id}
                 className={`order-card ${newOrderId === order._id ? 'highlight' : ''}`}
               >
                 <div className="order-header">
@@ -98,13 +98,13 @@ const Orders = () => {
                     </p>
                   </div>
                   <div className="order-status">
-                    <span 
+                    <span
                       className="status-badge"
                       style={{ backgroundColor: getStatusColor(order.order_status) }}
                     >
                       {order.order_status.charAt(0).toUpperCase() + order.order_status.slice(1)}
                     </span>
-                    <span 
+                    <span
                       className="payment-status"
                       style={{ color: getPaymentStatusColor(order.payment_status) }}
                     >
@@ -116,8 +116,8 @@ const Orders = () => {
                 <div className="order-items">
                   {order.items.map(item => (
                     <div key={item._id} className="order-item">
-                      <img 
-                        src={item.image_url} 
+                      <img
+                        src={item.image_url}
                         alt={item.name}
                         onError={(e) => {
                           e.target.src = 'https://via.placeholder.com/80x80?text=No+Image';
