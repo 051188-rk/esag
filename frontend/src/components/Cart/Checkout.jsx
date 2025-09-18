@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
-import Loading from '../components/Common/Loading';
+import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
+import Loading from '../Common/Loading'; // Corrected import path
 import './Checkout.css';
 
 const Checkout = () => {

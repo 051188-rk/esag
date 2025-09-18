@@ -7,12 +7,12 @@ import { CartProvider } from './context/CartContext';
 import Layout from './components/Layout/Layout';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 
-// Pages
+// Pages - Make sure these are DEFAULT imports
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
+import Checkout from './components/Cart/Checkout'; // Corrected import path
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Orders from './pages/Orders';
