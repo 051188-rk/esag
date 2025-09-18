@@ -1,0 +1,112 @@
+.payment-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    padding: 2rem;
+    background: #f1f5f9;
+}
+
+.payment-container {
+    width: 100%;
+    max-width: 450px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.payment-header {
+    background: #2563eb;
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.payment-header h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+}
+
+.payment-body {
+    padding: 1.5rem;
+}
+
+.payment-methods-tabs {
+    display: flex;
+    background: #e2e8f0;
+    border-radius: 8px;
+    padding: 0.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.payment-methods-tabs button {
+    flex: 1;
+    padding: 0.75rem;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.payment-methods-tabs button.active {
+    background: white;
+    color: #2563eb;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.payment-form input, .payment-form select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+}
+
+.card-details {
+    display: flex;
+    gap: 1rem;
+}
+
+.qr-code {
+    width: 150px;
+    height: 150px;
+    background: #e2e8f0;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+}
+
+.payment-footer {
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+
+.total-amount {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.pay-now-btn {
+    width: 100%;
+    padding: 1rem;
+    background: #059669;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.secure-note {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 1rem;
+}

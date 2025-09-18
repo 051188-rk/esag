@@ -7,12 +7,13 @@ import { CartProvider } from './context/CartContext';
 import Layout from './components/Layout/Layout';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 
-// Pages - Make sure these are DEFAULT imports
+// Pages
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
-import Checkout from './components/Cart/Checkout'; // Corrected import path
+import Checkout from './components/Cart/Checkout';
+import Payment from './components/Cart/DummyPayment'; // New payment page
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Orders from './pages/Orders';
@@ -47,6 +48,12 @@ function App() {
                 <Route path="/checkout" element={
                   <ProtectedRoute>
                     <Checkout />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/payment/:orderId" element={
+                  <ProtectedRoute>
+                    <Payment />
                   </ProtectedRoute>
                 } />
                 
