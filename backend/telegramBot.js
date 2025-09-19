@@ -1,8 +1,8 @@
 const TelegramBot = require('node-telegram-bot-api');
-const User = require('./models/user');
-const Product = require('./models/product');
-const Cart = require('./models/cart');
-const Order = require('./models/order'); 
+const User = require('./models/User');
+const Product = require('./models/Product');
+const Cart = require('./models/Cart');
+const Order = require('./models/Order');
 const { generateOrderStatusUpdate } = require('./utils/aiService');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -18,6 +18,7 @@ function initializeTelegramBot() {
 
   // --- Helper Functions ---
   const getUserByChatId = (chatId) => User.findOne({ telegramChatId: chatId });
+
   const requireLogin = async (chatId) => {
     const user = await getUserByChatId(chatId);
     if (!user) {
@@ -27,7 +28,7 @@ function initializeTelegramBot() {
     return user;
   };
 
-  // --- Bot Commands ---
+  // --- Main Command Handlers ---
 
   bot.onText(/\/start/, (msg) => {
     bot.sendMessage(msg.chat.id, 
@@ -47,7 +48,7 @@ function initializeTelegramBot() {
       bot.sendMessage(chatId, `✅ Hello ${user.name}! You are successfully logged in.`);
     } catch (e) { bot.sendMessage(chatId, "An error occurred during login."); }
   });
-
+  
   bot.onText(/\/logout/, async (msg) => {
     const user = await requireLogin(msg.chat.id);
     if (!user) return;
@@ -63,7 +64,7 @@ function initializeTelegramBot() {
       const keyboard = {
         inline_keyboard: categories.map(cat => ([{
           text: cat,
-          callback_data: `category_${cat}`
+          callback_data: `category_${cat}_1` // Start at page 1
         }]))
       };
       bot.sendMessage(msg.chat.id, "Please choose a category:", { reply_markup: keyboard });
@@ -91,15 +92,36 @@ function initializeTelegramBot() {
       bot.sendMessage(msg.chat.id, `🛒 Added ${quantity} x *${product.name}* to your cart.`, { parse_mode: 'Markdown' });
     } catch (e) { bot.sendMessage(msg.chat.id, "Couldn't add to cart. Check the Product ID."); }
   });
-
-  const checkoutHandler = async (msg, paymentMethod) => {
+  
+  bot.onText(/\/mycart/, async (msg) => {
     const user = await requireLogin(msg.chat.id);
     if (!user) return;
     try {
       const cart = await Cart.findOne({ user: user._id }).populate('items.product');
       if (!cart || cart.items.length === 0) {
-        return bot.sendMessage(msg.chat.id, "Your cart is empty.");
+        return bot.sendMessage(msg.chat.id, "Your cart is empty. Use /categories to find products!");
       }
+      let response = "*Your Shopping Cart:*\n\n";
+      cart.items.forEach(item => {
+        response += `*${item.product.name}*\n`;
+        response += `  Qty: ${item.quantity} x ₹${item.price_at_time} = ₹${item.quantity * item.price_at_time}\n\n`;
+      });
+      response += `*Total: ₹${cart.total_amount}*\n\n`;
+      response += "Use /checkout or /payondelivery to place your order.";
+      bot.sendMessage(msg.chat.id, response, { parse_mode: 'Markdown' });
+    } catch (e) {
+      console.error(e);
+      bot.sendMessage(msg.chat.id, "Sorry, I couldn't retrieve your cart.");
+    }
+  });
+
+  const checkoutHandler = async (msg, paymentMethod) => {
+    const user = await requireLogin(msg.chat.id);
+    if (!user) return;
+    try {
+      const cart = await Cart.findOne({ user: user._id });
+      if (!cart || cart.items.length === 0) return bot.sendMessage(msg.chat.id, "Your cart is empty.");
+      
       const total_amount = cart.total_amount + (paymentMethod === 'cod' ? 25 : 0);
       const order = new Order({
         user: user._id,
@@ -109,6 +131,7 @@ function initializeTelegramBot() {
         total_amount, subtotal: cart.total_amount,
         cod_fee: paymentMethod === 'cod' ? 25 : 0
       });
+
       await order.save();
       cart.items = [];
       await cart.save();
@@ -142,23 +165,48 @@ function initializeTelegramBot() {
     } catch (e) { bot.sendMessage(msg.chat.id, "Couldn't get the order status."); }
   });
 
-  // --- Callback Query Handler (for category buttons) ---
+  // --- Callback Query Handler (for Inline Buttons) ---
   bot.on('callback_query', async (callbackQuery) => {
     const { data, message } = callbackQuery;
     const chatId = message.chat.id;
 
     if (data.startsWith('category_')) {
-      const category = data.split('_')[1];
-      bot.answerCallbackQuery(callbackQuery.id, { text: `Fetching ${category} products...` });
+      const [_, category, pageStr] = data.split('_');
+      const page = parseInt(pageStr);
+      const limit = 12;
+
+      bot.answerCallbackQuery(callbackQuery.id);
+      
       try {
-        const products = await Product.find({ category, is_active: true }).limit(10);
+        const products = await Product.find({ category, is_active: true })
+          .skip((page - 1) * limit)
+          .limit(limit);
+        
+        const totalProducts = await Product.countDocuments({ category, is_active: true });
+        
         if (products.length === 0) return bot.sendMessage(chatId, `No products found in ${category}.`);
-        let response = `*Products in ${category}:*\n\n`;
+
+        let response = `*Products in ${category} (Page ${page}):*\n\n`;
         products.forEach(p => {
           response += `📦 *${p.name}* - ₹${p.price}\n   ID: \`${p._id}\`\n\n`;
         });
-        bot.sendMessage(chatId, response, { parse_mode: 'Markdown' });
-      } catch (e) { bot.sendMessage(chatId, "Failed to fetch products for that category."); }
+
+        const keyboard = { inline_keyboard: [] };
+        const hasNextPage = (page * limit) < totalProducts;
+
+        if (hasNextPage) {
+          keyboard.inline_keyboard.push([{
+            text: 'Next Page →',
+            callback_data: `category_${category}_${page + 1}`
+          }]);
+        }
+
+        bot.sendMessage(chatId, response, { 
+            parse_mode: 'Markdown',
+            reply_markup: hasNextPage ? keyboard : {} 
+        });
+
+      } catch (e) { bot.sendMessage(chatId, "Failed to fetch products."); }
     }
   });
 }
