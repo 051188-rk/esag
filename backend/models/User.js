@@ -33,6 +33,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['user', 'admin'],
     default: 'user'
+  },
+  telegramChatId: {
+    type: String,
+    unique: true,
+    sparse: true // Allows multiple users to not have a chat ID
   }
 }, {
   timestamps: true

@@ -4,6 +4,7 @@ dotenv.config(); // MUST be the first line of your application
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const { initializeTelegramBot } = require('./telegramBot');
 
 // Routes
 const authRoutes = require('./routes/auth');
@@ -49,5 +50,6 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
+    initializeTelegramBot(); // Start the Telegram bot
 });
