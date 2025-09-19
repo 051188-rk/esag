@@ -95,4 +95,5 @@ productSchema.index({ is_featured: 1, is_active: 1 });
 productSchema.index({ price: 1, is_active: 1 });
 productSchema.index({ createdAt: -1, is_active: 1 });
 
-module.exports = mongoose.model('Product', productSchema);
+// This change prevents the OverwriteModelError by checking if the model already exists
+module.exports = mongoose.models.Product || mongoose.model('Product', productSchema);

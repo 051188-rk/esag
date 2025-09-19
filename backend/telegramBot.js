@@ -1,162 +1,164 @@
 const TelegramBot = require('node-telegram-bot-api');
-const User = require('./models/User');
-const Product = require('./models/Product');
-const Cart = require('./models/Cart');
-const Order = require('./models/Order');
+const User = require('./models/user');
+const Product = require('./models/product');
+const Cart = require('./models/cart');
+const Order = require('./models/order'); 
 const { generateOrderStatusUpdate } = require('./utils/aiService');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 
 function initializeTelegramBot() {
   if (!token) {
-    console.warn("Telegram Bot Token not found. Bot will not be started.");
+    console.warn("❌ Telegram Bot Token not found. Bot will not be started.");
     return;
   }
   
   const bot = new TelegramBot(token, { polling: true });
-  console.log("Telegram Bot is running...");
+  console.log("✅ Telegram Bot is running and polling for messages...");
 
-  // Helper function to get the user associated with a chat ID
-  const getUserByChatId = async (chatId) => {
-    return User.findOne({ telegramChatId: chatId });
+  // --- Helper Functions ---
+  const getUserByChatId = (chatId) => User.findOne({ telegramChatId: chatId });
+  const requireLogin = async (chatId) => {
+    const user = await getUserByChatId(chatId);
+    if (!user) {
+      bot.sendMessage(chatId, "⚠️ You need to be logged in to do that. Please use the `/login your-email@example.com your_password` command first.");
+      return null;
+    }
+    return user;
   };
 
   // --- Bot Commands ---
 
-  // /start command - The first command a user sends
   bot.onText(/\/start/, (msg) => {
     bot.sendMessage(msg.chat.id, 
-      "Welcome to ShopEase Bot! 🛍️\n\nTo get started, please log in to your account using the format:\n`/login your-email@example.com your_password`"
+      "Welcome to the ShopEase Bot! 🛍️\n\nHere are the commands you can use:\n\n/login <email> <password> - Connect your account\n/categories - Browse products by category\n/addtocart <product_id> [quantity] - Add an item to your cart\n/mycart - View your current cart\n/checkout - Place an order (paid online)\n/payondelivery - Place an order with Cash on Delivery\n/myorders - View your past orders\n/trackorder #<order_id> - Get the status of an order\n/logout - Disconnect your account"
     );
   });
 
-  // /login command - To link Telegram with their app account
   bot.onText(/\/login (.+) (.+)/, async (msg, match) => {
-    const chatId = msg.chat.id;
-    const email = match[1];
-    const password = match[2];
-
+    const [chatId, email, password] = [msg.chat.id, match[1], match[2]];
     try {
       const user = await User.findOne({ email });
       if (!user || !(await user.comparePassword(password))) {
-        return bot.sendMessage(chatId, "❌ Invalid email or password. Please try again.");
+        return bot.sendMessage(chatId, "❌ Invalid email or password.");
       }
-      
       user.telegramChatId = chatId;
       await user.save();
-
-      bot.sendMessage(chatId, `✅ Hello ${user.name}! You are successfully logged in. You can now use other commands like /products.`);
-    } catch (error) {
-      console.error("Telegram login error:", error);
-      bot.sendMessage(chatId, "Sorry, something went wrong during login.");
-    }
+      bot.sendMessage(chatId, `✅ Hello ${user.name}! You are successfully logged in.`);
+    } catch (e) { bot.sendMessage(chatId, "An error occurred during login."); }
   });
 
-  // /products command
-  bot.onText(/\/products/, async (msg) => {
-    const user = await getUserByChatId(msg.chat.id);
-    if (!user) return bot.sendMessage(msg.chat.id, "Please /login first.");
+  bot.onText(/\/logout/, async (msg) => {
+    const user = await requireLogin(msg.chat.id);
+    if (!user) return;
+    user.telegramChatId = undefined;
+    await user.save();
+    bot.sendMessage(msg.chat.id, "✅ You have been successfully logged out.");
+  });
 
+  bot.onText(/\/categories/, async (msg) => {
+    if (!(await requireLogin(msg.chat.id))) return;
     try {
-      const products = await Product.find({ is_active: true }).limit(10).lean();
-      if (products.length === 0) {
-        return bot.sendMessage(msg.chat.id, "No products found at the moment.");
-      }
-
-      let response = "Here are some of our products:\n\n";
-      products.forEach(p => {
-        response += `📦 *${p.name}* - ₹${p.price}\n`;
-        response += `   ID: \`${p._id}\`\n\n`;
-      });
-      response += "To add an item, use `/addtocart <product_id>`";
-
-      bot.sendMessage(msg.chat.id, response, { parse_mode: 'Markdown' });
-    } catch (error) {
-      bot.sendMessage(msg.chat.id, "Sorry, I couldn't fetch the products.");
-    }
+      const categories = await Product.distinct('category');
+      const keyboard = {
+        inline_keyboard: categories.map(cat => ([{
+          text: cat,
+          callback_data: `category_${cat}`
+        }]))
+      };
+      bot.sendMessage(msg.chat.id, "Please choose a category:", { reply_markup: keyboard });
+    } catch (e) { bot.sendMessage(msg.chat.id, "Couldn't fetch categories."); }
   });
 
-  // /addtocart command
-  bot.onText(/\/addtocart (.+)/, async (msg, match) => {
-    const user = await getUserByChatId(msg.chat.id);
-    if (!user) return bot.sendMessage(msg.chat.id, "Please /login first.");
-
-    const productId = match[1];
+  bot.onText(/\/addtocart (\w+) ?(\d+)?/, async (msg, match) => {
+    const user = await requireLogin(msg.chat.id);
+    if (!user) return;
+    const [productId, quantity] = [match[1], parseInt(match[2] || '1')];
     try {
       const product = await Product.findById(productId);
-      if (!product || product.stock_quantity < 1) {
+      if (!product || product.stock_quantity < quantity) {
         return bot.sendMessage(msg.chat.id, "Product not found or is out of stock.");
       }
-
       let cart = await Cart.findOne({ user: user._id });
       if (!cart) cart = new Cart({ user: user._id, items: [] });
-      
-      const itemIndex = cart.items.findIndex(item => item.product.toString() === productId);
+      const itemIndex = cart.items.findIndex(i => i.product.toString() === productId);
       if (itemIndex > -1) {
-        cart.items[itemIndex].quantity += 1;
+        cart.items[itemIndex].quantity += quantity;
       } else {
-        cart.items.push({ product: productId, quantity: 1, price_at_time: product.price });
+        cart.items.push({ product: productId, quantity, price_at_time: product.price });
       }
       await cart.save();
-
-      bot.sendMessage(msg.chat.id, `🛒 Added *${product.name}* to your cart.`, { parse_mode: 'Markdown' });
-    } catch (error) {
-      bot.sendMessage(msg.chat.id, "Sorry, I couldn't add that to your cart. Please check the Product ID.");
-    }
+      bot.sendMessage(msg.chat.id, `🛒 Added ${quantity} x *${product.name}* to your cart.`, { parse_mode: 'Markdown' });
+    } catch (e) { bot.sendMessage(msg.chat.id, "Couldn't add to cart. Check the Product ID."); }
   });
 
-  // /checkout command
-  bot.onText(/\/checkout/, async (msg) => {
-    const user = await getUserByChatId(msg.chat.id);
-    if (!user) return bot.sendMessage(msg.chat.id, "Please /login first.");
-    
+  const checkoutHandler = async (msg, paymentMethod) => {
+    const user = await requireLogin(msg.chat.id);
+    if (!user) return;
     try {
       const cart = await Cart.findOne({ user: user._id }).populate('items.product');
       if (!cart || cart.items.length === 0) {
-        return bot.sendMessage(msg.chat.id, "Your cart is empty. Use /products to find items to add.");
+        return bot.sendMessage(msg.chat.id, "Your cart is empty.");
       }
-      
-      // Simplified checkout for the bot
-      const total_amount = cart.total_amount;
+      const total_amount = cart.total_amount + (paymentMethod === 'cod' ? 25 : 0);
       const order = new Order({
         user: user._id,
-        items: cart.items.map(item => ({
-          product: item.product._id, name: item.product.name, image_url: item.product.image_url,
-          quantity: item.quantity, price: item.price_at_time
-        })),
+        items: cart.items.map(i => ({...i.toObject()})),
         shipping_address: user.address,
-        payment_method: 'online', // Default for bot
-        total_amount: total_amount,
-        subtotal: total_amount,
+        payment_method: paymentMethod,
+        total_amount, subtotal: cart.total_amount,
+        cod_fee: paymentMethod === 'cod' ? 25 : 0
       });
-
       await order.save();
       cart.items = [];
       await cart.save();
-
       bot.sendMessage(msg.chat.id, `✅ Order placed successfully!\nYour Order ID is: \`${order.order_id}\``, { parse_mode: 'Markdown' });
-    } catch (error) {
-      console.error(error);
-      bot.sendMessage(msg.chat.id, "Sorry, something went wrong during checkout.");
-    }
+    } catch (e) { console.error(e); bot.sendMessage(msg.chat.id, "Checkout failed."); }
+  };
+
+  bot.onText(/\/checkout/, (msg) => checkoutHandler(msg, 'online'));
+  bot.onText(/\/payondelivery/, (msg) => checkoutHandler(msg, 'cod'));
+
+  bot.onText(/\/myorders/, async (msg) => {
+    const user = await requireLogin(msg.chat.id);
+    if (!user) return;
+    const orders = await Order.find({ user: user._id }).sort({ createdAt: -1 }).limit(5);
+    if (orders.length === 0) return bot.sendMessage(msg.chat.id, "You have no past orders.");
+    let response = "*Your 5 most recent orders:*\n\n";
+    orders.forEach(o => {
+      response += `*ID:* \`${o.order_id}\`\n*Status:* ${o.order_status}\n*Total:* ₹${o.total_amount}\n*Date:* ${o.createdAt.toLocaleDateString()}\n\n`;
+    });
+    bot.sendMessage(msg.chat.id, response, { parse_mode: 'Markdown' });
   });
 
-  // Order Tracking via natural language
-  bot.onText(/where is my order #(.+)/i, async (msg, match) => {
-    const user = await getUserByChatId(msg.chat.id);
-    if (!user) return bot.sendMessage(msg.chat.id, "Please /login first.");
-
-    const orderId = match[1].trim();
+  bot.onText(/\/trackorder #?(.+)/i, async (msg, match) => {
+    const user = await requireLogin(msg.chat.id);
+    if (!user) return;
     try {
-      const order = await Order.findOne({ order_id: orderId, user: user._id });
-      if (!order) {
-        return bot.sendMessage(msg.chat.id, "I couldn't find that order for your account.");
-      }
-
+      const order = await Order.findOne({ order_id: match[1].trim(), user: user._id });
+      if (!order) return bot.sendMessage(msg.chat.id, "Could not find that order for your account.");
       const statusUpdate = await generateOrderStatusUpdate(order);
       bot.sendMessage(msg.chat.id, statusUpdate);
-    } catch (error) {
-      bot.sendMessage(msg.chat.id, "Sorry, I couldn't get the status for that order.");
+    } catch (e) { bot.sendMessage(msg.chat.id, "Couldn't get the order status."); }
+  });
+
+  // --- Callback Query Handler (for category buttons) ---
+  bot.on('callback_query', async (callbackQuery) => {
+    const { data, message } = callbackQuery;
+    const chatId = message.chat.id;
+
+    if (data.startsWith('category_')) {
+      const category = data.split('_')[1];
+      bot.answerCallbackQuery(callbackQuery.id, { text: `Fetching ${category} products...` });
+      try {
+        const products = await Product.find({ category, is_active: true }).limit(10);
+        if (products.length === 0) return bot.sendMessage(chatId, `No products found in ${category}.`);
+        let response = `*Products in ${category}:*\n\n`;
+        products.forEach(p => {
+          response += `📦 *${p.name}* - ₹${p.price}\n   ID: \`${p._id}\`\n\n`;
+        });
+        bot.sendMessage(chatId, response, { parse_mode: 'Markdown' });
+      } catch (e) { bot.sendMessage(chatId, "Failed to fetch products for that category."); }
     }
   });
 }

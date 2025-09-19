@@ -79,4 +79,5 @@ orderSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Order', orderSchema);
+// This change prevents the OverwriteModelError
+module.exports = mongoose.models.Order || mongoose.model('Order', orderSchema);

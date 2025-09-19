@@ -45,4 +45,5 @@ cartSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Cart', cartSchema);
+// This change prevents the OverwriteModelError
+module.exports = mongoose.models.Cart || mongoose.model('Cart', cartSchema);

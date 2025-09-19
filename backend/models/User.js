@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema({
   telegramChatId: {
     type: String,
     unique: true,
-    sparse: true // Allows multiple users to not have a chat ID
+    sparse: true
   }
 }, {
   timestamps: true
@@ -53,4 +53,5 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-module.exports = mongoose.model('User', userSchema);
+// This change prevents the OverwriteModelError
+module.exports = mongoose.models.User || mongoose.model('User', userSchema);
