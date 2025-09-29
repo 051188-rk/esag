@@ -294,6 +294,50 @@ const getProductById = async (req, res) => {
     }
   };
 
+  const getRelatedProducts = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const mainProduct = await Product.findById(id).lean();
+  
+      if (!mainProduct) {
+        return res.status(404).json({ success: false, message: 'Product not found' });
+      }
+  
+      // 1. Find products with the same category and subcategory
+      let products = await Product.find({
+        _id: { $ne: id }, // Exclude the current product
+        category: mainProduct.category,
+        subcategory: mainProduct.subcategory,
+      }).limit(10).lean();
+  
+      const foundIds = products.map(p => p._id);
+      foundIds.push(id); // Add current product ID to exclusion list for the next query
+  
+      // 2. If we don't have 10 products, find more from the same main category
+      if (products.length < 10) {
+        const remainingLimit = 10 - products.length;
+        const categoryProducts = await Product.find({
+          _id: { $nin: foundIds }, // Exclude all previously found IDs
+          category: mainProduct.category,
+        }).limit(remainingLimit).lean();
+        
+        // Combine the two lists
+        products = products.concat(categoryProducts);
+      }
+      
+      res.json({
+        success: true,
+        products: products
+      });
+  
+    } catch (error) {
+      console.error('Related products error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Server error while fetching related products'
+      });
+    }
+  };
 
 
 // Export all functions properly
@@ -305,4 +349,7 @@ module.exports = {
   getBrands,
   getFeaturedProducts,
   smartSearch,
+  getRelatedProducts
 };
+
+

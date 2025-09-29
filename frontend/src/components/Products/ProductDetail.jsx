@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import { toast } from 'react-toastify';
@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import api from '../services/api';
 import Loading from '../components/Common/Loading';
+import RelatedProducts from '../components/Products/RelatedProducts'; // Keep this import
 import './ProductDetail.css';
 
 const ProductDetail = () => {
@@ -19,22 +20,26 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
 
-  const { data: productData, isLoading, error } = useQuery(
+  // This hook fetches the main product
+  const { data: productData, isLoading, isError, error } = useQuery(
     ['product', id],
-    async () => {
-      console.log('Fetching product with ID:', id);
-      const response = await api.get(`/products/${id}`);
-      console.log('Product API response:', response.data);
-      return response.data;
-    },
+    () => api.get(`/products/${id}`).then(res => res.data),
     { 
       staleTime: 300000,
-      onError: (error) => {
-        console.error('Product fetch error:', error);
+      onError: (err) => {
         toast.error('Failed to load product details');
       }
     }
   );
+
+  // Reset quantity and options when the product ID changes
+  useEffect(() => {
+    setQuantity(1);
+    setSelectedColor('');
+    setSelectedSize('');
+    setActiveImage(0);
+  }, [id]);
+
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
@@ -46,8 +51,8 @@ const ProductDetail = () => {
     try {
       await addToCart(product._id, quantity, selectedColor, selectedSize);
       toast.success('Product added to cart!');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to add to cart');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to add to cart');
     }
   };
 
@@ -65,7 +70,7 @@ const ProductDetail = () => {
 
   if (isLoading) return <Loading size="large" />;
   
-  if (error || !productData?.success) {
+  if (isError || !productData?.success) {
     return (
       <div className="error-container">
         <h2>Product not found</h2>
@@ -77,7 +82,6 @@ const ProductDetail = () => {
     );
   }
 
-  // Extract product from API response
   const product = productData.product;
   
   if (!product) {
@@ -91,7 +95,6 @@ const ProductDetail = () => {
     );
   }
 
-  // Safe calculations with fallbacks
   const currentPrice = Number(product.price) || 0;
   const originalPrice = Number(product.original_price) || currentPrice;
   const discountPercentage = originalPrice > currentPrice ? 
@@ -103,193 +106,149 @@ const ProductDetail = () => {
   const images = [product.image_url, ...(product.additional_images || [])].filter(Boolean);
 
   return (
-    <div className="product-detail">
-      <div className="container">
-        <div className="product-detail-layout">
-          {/* Product Images */}
-          <div className="product-images">
-            <div className="main-image">
-              <img 
-                src={images[activeImage] || product.image_url || 'https://via.placeholder.com/500x500?text=No+Image'} 
-                alt={product.name || 'Product'}
-                onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/500x500?text=No+Image';
-                }}
-              />
-              {discountPercentage > 0 && (
-                <span className="discount-badge">-{discountPercentage}%</span>
-              )}
-            </div>
-            
-            {images.length > 1 && (
-              <div className="image-thumbnails">
-                {images.map((image, index) => (
-                  <img
-                    key={index}
-                    src={image}
-                    alt={`${product.name} ${index + 1}`}
-                    className={activeImage === index ? 'active' : ''}
-                    onClick={() => setActiveImage(index)}
-                    onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/100x100?text=No+Image';
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Product Info */}
-          <div className="product-info">
-            <div className="product-header">
-              <h1>{product.name || 'Product Name Not Available'}</h1>
-              <p className="brand">Brand: {product.brand || 'Unknown Brand'}</p>
-              <div className="category-path">
-                {product.category || 'Category'} › {product.subcategory || 'Subcategory'}
-              </div>
-            </div>
-
-            <div className="product-rating">
-              <div className="stars">
-                {'★'.repeat(Math.floor(rating))}
-                {'☆'.repeat(5 - Math.floor(rating))}
-              </div>
-              <span className="rating-text">
-                ({rating.toFixed(1)}) • {reviewCount} reviews
-              </span>
-            </div>
-
-            <div className="product-pricing">
-              <span className="current-price">₹{currentPrice.toLocaleString()}</span>
-              {originalPrice > currentPrice && (
-                <span className="original-price">₹{originalPrice.toLocaleString()}</span>
-              )}
-              {discountPercentage > 0 && (
-                <span className="savings">
-                  You save ₹{(originalPrice - currentPrice).toLocaleString()} 
-                  ({discountPercentage}%)
-                </span>
-              )}
-            </div>
-
-            <div className="product-description">
-              <h3>Description</h3>
-              <p>{product.description || 'No description available for this product.'}</p>
-            </div>
-
-            {/* Product Options */}
-            {Array.isArray(product.color_options) && product.color_options.length > 0 && (
-              <div className="product-options">
-                <h4>Color:</h4>
-                <div className="color-options">
-                  {product.color_options.map(color => (
-                    <button
-                      key={color}
-                      className={`color-option ${selectedColor === color ? 'selected' : ''}`}
-                      onClick={() => setSelectedColor(color)}
-                    >
-                      {color}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {Array.isArray(product.size_options) && product.size_options.length > 0 && (
-              <div className="product-options">
-                <h4>Size:</h4>
-                <div className="size-options">
-                  {product.size_options.map(size => (
-                    <button
-                      key={size}
-                      className={`size-option ${selectedSize === size ? 'selected' : ''}`}
-                      onClick={() => setSelectedSize(size)}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Quantity Selector */}
-            <div className="quantity-selector">
-              <h4>Quantity:</h4>
-              <div className="quantity-controls">
-                <button 
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={quantity <= 1}
-                >
-                  -
-                </button>
-                <span>{quantity}</span>
-                <button 
-                  onClick={() => setQuantity(Math.min(stockQuantity, quantity + 1))}
-                  disabled={quantity >= stockQuantity || stockQuantity <= 0}
-                >
-                  +
-                </button>
-              </div>
-              <span className="stock-info">
-                {stockQuantity > 0 ? (
-                  `${stockQuantity} in stock`
-                ) : (
-                  'Out of stock'
+    <>
+      <div className="product-detail">
+        <div className="container">
+          <div className="product-detail-layout">
+            {/* Product Images */}
+            <div className="product-images">
+              <div className="main-image">
+                <img 
+                  src={images[activeImage] || 'https://via.placeholder.com/500x500?text=No+Image'} 
+                  alt={product.name || 'Product'}
+                  onError={(e) => { e.target.src = 'https://via.placeholder.com/500x500?text=No+Image'; }}
+                />
+                {discountPercentage > 0 && (
+                  <span className="discount-badge">-{discountPercentage}%</span>
                 )}
-              </span>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="product-actions">
-              <button 
-                className="add-to-cart-btn"
-                onClick={handleAddToCart}
-                disabled={stockQuantity === 0}
-              >
-                Add to Cart
-              </button>
-              <button 
-                className="buy-now-btn"
-                onClick={handleBuyNow}
-                disabled={stockQuantity === 0}
-              >
-                Buy Now
-              </button>
-            </div>
-
-            {/* Specifications */}
-            {product.specifications && typeof product.specifications === 'object' && 
-             Object.keys(product.specifications).length > 0 && (
-              <div className="product-specifications">
-                <h3>Specifications</h3>
-                <div className="specs-grid">
-                  {Object.entries(product.specifications).map(([key, value]) => (
-                    <div key={key} className="spec-item">
-                      <span className="spec-label">{key}:</span>
-                      <span className="spec-value">{value}</span>
-                    </div>
+              </div>
+              
+              {images.length > 1 && (
+                <div className="image-thumbnails">
+                  {images.map((image, index) => (
+                    <img
+                      key={index}
+                      src={image}
+                      alt={`${product.name} ${index + 1}`}
+                      className={activeImage === index ? 'active' : ''}
+                      onClick={() => setActiveImage(index)}
+                      onError={(e) => { e.target.src = 'https://via.placeholder.com/100x100?text=No+Image'; }}
+                    />
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
-            {/* Additional Info */}
-            <div className="additional-info">
-              {product.weight && (
-                <div className="info-item">
-                  <strong>Weight:</strong> {product.weight} kg
+            {/* Product Info */}
+            <div className="product-info">
+              <div className="product-header">
+                <h1>{product.name}</h1>
+                <p className="brand">Brand: {product.brand}</p>
+                <div className="category-path">
+                  {product.category} › {product.subcategory}
+                </div>
+              </div>
+
+              <div className="product-rating">
+                <div className="stars">
+                  {'★'.repeat(Math.floor(rating))}
+                  {'☆'.repeat(5 - Math.floor(rating))}
+                </div>
+                <span className="rating-text">
+                  ({rating.toFixed(1)}) • {reviewCount} reviews
+                </span>
+              </div>
+
+              <div className="product-pricing">
+                <span className="current-price">₹{currentPrice.toLocaleString()}</span>
+                {originalPrice > currentPrice && (
+                  <span className="original-price">₹{originalPrice.toLocaleString()}</span>
+                )}
+                {discountPercentage > 0 && (
+                  <span className="savings">
+                    You save ₹{(originalPrice - currentPrice).toLocaleString()} ({discountPercentage}%)
+                  </span>
+                )}
+              </div>
+
+              <div className="product-description">
+                <h3>Description</h3>
+                <p>{product.description}</p>
+              </div>
+
+              {Array.isArray(product.color_options) && product.color_options.length > 0 && (
+                <div className="product-options">
+                  <h4>Color:</h4>
+                  <div className="color-options">
+                    {product.color_options.map(color => (
+                      <button
+                        key={color}
+                        className={`color-option ${selectedColor === color ? 'selected' : ''}`}
+                        onClick={() => setSelectedColor(color)}
+                      >
+                        {color}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
-              {product.dimensions && (
-                <div className="info-item">
-                  <strong>Dimensions:</strong> {product.dimensions}
+
+              {Array.isArray(product.size_options) && product.size_options.length > 0 && (
+                <div className="product-options">
+                  <h4>Size:</h4>
+                  <div className="size-options">
+                    {product.size_options.map(size => (
+                      <button
+                        key={size}
+                        className={`size-option ${selectedSize === size ? 'selected' : ''}`}
+                        onClick={() => setSelectedSize(size)}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="quantity-selector">
+                <h4>Quantity:</h4>
+                <div className="quantity-controls">
+                  <button onClick={() => setQuantity(q => Math.max(1, q - 1))} disabled={quantity <= 1}>-</button>
+                  <span>{quantity}</span>
+                  <button onClick={() => setQuantity(q => Math.min(stockQuantity, q + 1))} disabled={quantity >= stockQuantity}>+</button>
+                </div>
+                <span className="stock-info">
+                  {stockQuantity > 0 ? `${stockQuantity} in stock` : 'Out of stock'}
+                </span>
+              </div>
+
+              <div className="product-actions">
+                <button className="add-to-cart-btn" onClick={handleAddToCart} disabled={stockQuantity === 0}>Add to Cart</button>
+                <button className="buy-now-btn" onClick={handleBuyNow} disabled={stockQuantity === 0}>Buy Now</button>
+              </div>
+
+              {product.specifications && Object.keys(product.specifications).length > 0 && (
+                <div className="product-specifications">
+                  <h3>Specifications</h3>
+                  <div className="specs-grid">
+                    {Object.entries(product.specifications).map(([key, value]) => (
+                      <div key={key} className="spec-item">
+                        <span className="spec-label">{key}:</span>
+                        <span className="spec-value">{String(value)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
           </div>
         </div>
       </div>
-    </div>
+      
+      {/* --- THIS IS THE FIX --- */}
+      {/* We check if the product has loaded successfully (`product._id` exists) before rendering RelatedProducts */}
+      {product?._id && <RelatedProducts productId={product._id} />}
+    </>
   );
 };
 
