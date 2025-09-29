@@ -85,7 +85,7 @@ const Header = () => {
                 title="Smart Search"
                 aria-label="Smart Search"
               >
-                ✨
+                <img src="/smartsearch.png" alt="Smart Search" className="smart-search-icon" />
               </button>
             </div>
 

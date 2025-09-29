@@ -112,20 +112,30 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
-  background-color: #f3f4f6;
-  border: 1px solid var(--border);
-  color: #6b7280;
+  width: auto;
+  height: auto;
+  padding: 8px;
+  background: none;
+  border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 1.1rem;
+  margin-left: 4px;
 }
 
 .smart-search-btn:hover {
-  background-color: #e5e7eb;
-  color: var(--primary);
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+.smart-search-icon {
+  width: 100px;
+  height: auto;
+  object-fit: contain;
+  transition: all 0.2s ease;
+}
+
+.smart-search-btn:active .smart-search-icon {
+  transform: scale(0.95);
 }
 
 /* Navigation */

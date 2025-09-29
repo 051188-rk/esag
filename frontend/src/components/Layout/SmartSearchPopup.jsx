@@ -24,16 +24,24 @@ const SmartSearchPopup = ({ onClose }) => {
     }
     if (isListening) {
       SpeechRecognition.stopListening();
+      setIsListening(false);
     } else {
       resetTranscript();
-      SpeechRecognition.startListening();
+      SpeechRecognition.startListening({ continuous: true });
+      setIsListening(true);
     }
-    setIsListening(!isListening);
   };
 
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!query.trim()) return;
+    
+    // Stop listening if active
+    if (isListening) {
+      SpeechRecognition.stopListening();
+      setIsListening(false);
+    }
+    
     setIsLoading(true);
 
     try {
@@ -46,7 +54,7 @@ const SmartSearchPopup = ({ onClose }) => {
         navigate('/cart');
       } else {
         const searchParams = new URLSearchParams();
-        delete data.filters.intent; // Remove intent before creating params
+        delete data.filters.intent;
         for (const key in data.filters) {
           if (data.filters[key]) {
             searchParams.set(key, data.filters[key]);
@@ -56,38 +64,61 @@ const SmartSearchPopup = ({ onClose }) => {
       }
       onClose();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Search failed.');
+      toast.error(error.response?.data?.message || 'Search failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleClose = () => {
+    if (isListening) {
+      SpeechRecognition.stopListening();
+    }
+    onClose();
+  };
+
   return (
-    <div className="smart-search-overlay" onClick={onClose}>
+    <div className="smart-search-overlay" onClick={handleClose}>
       <div className="smart-search-popup" onClick={(e) => e.stopPropagation()}>
-        <h3>Smart Search</h3>
-        <p>Ask me to find products or add items to your cart.</p>
-        <form onSubmit={handleSearch}>
-          <div className="search-input-wrapper">
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder='e.g., "smartphones under 20000"'
-              autoFocus
-            />
-            <button 
-              type="button" 
-              onClick={handleMicClick} 
-              className={`mic-button ${isListening ? 'listening' : ''}`}
-            >
-              🎤
-            </button>
-          </div>
-          <button type="submit" disabled={isLoading} className="search-submit-btn">
-            {isLoading ? 'Thinking...' : 'Search'}
+        <div className="popup-content">
+          <button className="close-button" onClick={handleClose} aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
           </button>
-        </form>
+
+          <h3>Search</h3>
+          
+          <form onSubmit={handleSearch} className="search-form">
+            <div className="search-input-wrapper">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder='Search or use voice...'
+                autoFocus
+              />
+              <div className="mic-button-container">
+                <button 
+                  type="button"
+                  onClick={handleMicClick} 
+                  className={`mic-button ${isListening ? 'listening' : ''}`}
+                  title={isListening ? 'Stop listening' : 'Start voice search'}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
+                    <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" fill="currentColor"/>
+                    <path d="M19 10v1a7 7 0 0 1-14 0v-1h-1v1a8 8 0 0 0 7 7.94V22h2v-3.06A8 8 0 0 0 20 11v-1h-1z" fill="currentColor"/>
+                  </svg>
+                </button>
+                {isListening && <div className="mic-ripple"></div>}
+              </div>
+            </div>
+
+            <button type="submit" disabled={isLoading || !query.trim()} className="search-submit-btn">
+              {isLoading ? 'Searching...' : 'Search'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
