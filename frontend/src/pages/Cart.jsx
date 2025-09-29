@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useCart } from '../context/CartContext';
 import CartItem from '../components/Cart/CartItem';
 import Loading from '../components/Common/Loading';
@@ -64,7 +65,14 @@ const Cart = () => {
 
         {cart.items.length === 0 ? (
           <div className="empty-cart">
-            <div className="empty-cart-icon">🛒</div>
+            <div className="empty-cart-animation">
+              <DotLottieReact
+                src="https://lottie.host/bb9778c8-85ec-42e7-b223-0ab2047641c0/rT4DDNPHff.lottie"
+                loop
+                autoplay
+                style={{ width: '300px', height: '300px', margin: '0 auto' }}
+              />
+            </div>
             <h2>Your cart is empty</h2>
             <p>Add some products to your cart to get started!</p>
             <Link to="/products" className="continue-shopping">
