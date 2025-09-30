@@ -1,186 +1,205 @@
-.hero {
-    margin-bottom: 3rem;
-  }
-  
-  .hero-slide {
-    position: relative;
-    height: 400px;
-  }
-  
-  .hero-image {
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    position: relative;
-  }
-  
-  .hero-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .hero-content {
-    text-align: center;
-    color: white;
-    max-width: 500px;
-    padding: 0 1rem;
-  }
-  
-  .hero-content h1 {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-  }
-  
-  .hero-content p {
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
-  }
-  
-  .hero-button {
-    background: #2563eb;
-    color: white;
-    padding: 1rem 2rem;
-    text-decoration: none;
-    border-radius: 6px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    transition: background 0.3s;
-  }
-  
-  .hero-button:hover {
-    background: #1d4ed8;
-  }
-  
-  .categories-section, .featured-section, .promo-section {
-    padding: 3rem 0;
-  }
-  
-  .categories-section h2, .featured-section h2 {
-    text-align: center;
-    margin-bottom: 2rem;
-    font-size: 2.5rem;
-    color: #1f2937;
-  }
-  
-  .categories-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  
-  .category-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 2rem;
-    border-radius: 12px;
-    text-decoration: none;
-    text-align: center;
-    transition: transform 0.3s;
-  }
-  
-  .category-card:hover {
-    transform: translateY(-5px);
-  }
-  
-  .category-card h3 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.3rem;
-  }
-  
-  .category-card span {
-    font-size: 0.9rem;
-    opacity: 0.8;
-  }
-  
-  .product-slide {
-    padding: 0 10px;
-  }
-  
+/* --- Hero (Previously in Home.css, now primarily handled in Hero.css) --- */
+/* Keeping essential container styles here */
+.home-page .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* --- Promotional Section Styles --- */
+.promo-section {
+  padding: 4rem 0;
+  background: white;
+}
+
+.promo-grid {
+  display: grid;
+  /* 2 columns wide, 2 rows tall for the large card, 1 row for small cards */
+  grid-template-columns: repeat(3, 1fr); 
+  grid-template-rows: repeat(2, 200px); 
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.promo-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.promo-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+}
+
+.promo-large {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.promo-background {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+/* Dark overlay for text readability */
+.promo-background:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.1) 100%);
+  z-index: 2;
+}
+
+.promo-content {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+  color: white;
+  z-index: 3;
+}
+
+.promo-content h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.promo-content p {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.promo-link {
+  color: #fcd34d; /* Amber for link contrast */
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.promo-link:hover {
+  color: #fde047;
+}
+
+
+/* Sales Badges */
+.promo-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: #ef4444; /* Red for Sale */
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px; /* Pill shape */
+  font-weight: 700;
+  font-size: 0.875rem;
+  z-index: 4;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
+}
+
+.promo-badge-secondary {
+  background: #3b82f6; /* Blue for New Arrivals */
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+}
+
+.promo-badge-tertiary {
+  background: #10b981; /* Green for Free Shipping */
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+}
+
+
+/* Overlaid PNG Image and Hover Scale Effect */
+.promo-png-overlay {
+  position: absolute;
+  top: 10%;
+  right: 5%;
+  width: 30%; /* Responsive sizing */
+  max-width: 150px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+  z-index: 4;
+  /* Hover Scaling Effect Transition */
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+}
+
+/* Hover Scaling Effect */
+.promo-card:hover .promo-png-overlay {
+  transform: scale(1.1) rotate(2deg);
+}
+
+.promo-large .promo-png-overlay {
+  top: 10%;
+  right: 10%;
+  width: 40%;
+  max-width: 250px;
+}
+
+.promo-png-small {
+  top: 25%;
+  right: 5%;
+  width: 40%;
+  max-width: 120px;
+}
+
+
+@media (max-width: 1024px) {
   .promo-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
-    gap: 1.5rem;
-    max-width: 1200px;
-    margin: 0 auto;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: auto;
   }
-  
-  .promo-card {
-    position: relative;
-    border-radius: 12px;
-    overflow: hidden;
-    background: white;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  }
-  
   .promo-large {
-    grid-row: span 2;
-  }
-  
-  .promo-card img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-  }
-  
-  .promo-large img {
-    height: 100%;
-  }
-  
-  .promo-content {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(transparent, rgba(0,0,0,0.8));
-    color: white;
-    padding: 2rem;
-  }
-  
-  .promo-content h3 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.4rem;
-  }
-  
-  .promo-content p {
-    margin: 0 0 1rem 0;
-    opacity: 0.9;
-  }
-  
-  .promo-content a {
-    color: #60a5fa;
-    text-decoration: none;
-    font-weight: 600;
-  }
-  
-  .promo-content a:hover {
-    color: #93c5fd;
-  }
-  
-  @media (max-width: 768px) {
-    .hero-content h1 {
-      font-size: 2rem;
-    }
-    
-    .promo-grid {
-      grid-template-columns: 1fr;
-    }
-    
-    .promo-large {
+      grid-column: span 2;
       grid-row: span 1;
-    }
-    
-    .categories-grid {
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    }
+      height: 300px;
   }
-  
+  .promo-card {
+      height: 200px;
+  }
+  .promo-large .promo-png-overlay {
+      top: 20%;
+      right: 15%;
+      width: 30%;
+      max-width: 180px;
+  }
+  .promo-png-small {
+      width: 30%;
+      max-width: 100px;
+  }
+}
+
+@media (max-width: 768px) {
+  .promo-grid {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+      gap: 1rem;
+  }
+  .promo-large {
+      grid-column: span 1;
+      height: 250px;
+  }
+  .promo-card {
+      height: 180px;
+  }
+  .promo-png-overlay {
+      /* Hide for very small screens to save space and simplify layout */
+      display: none; 
+  }
+  .promo-content h3 {
+      font-size: 1.25rem;
+  }
+  .promo-content p {
+      font-size: 0.9rem;
+  }
+}

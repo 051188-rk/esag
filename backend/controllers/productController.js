@@ -107,11 +107,19 @@ const getAllProducts = async (req, res) => {
 
 const getFeaturedProducts = async (req, res) => {
   try {
-    // Get latest products instead of featured for now
-    const products = await Product.find({})
+    // First try to get featured products
+    let products = await Product.find({ isFeatured: true })
       .sort({ createdAt: -1 })
       .limit(8)
       .lean();
+    
+    // If no featured products found, get the latest products as fallback
+    if (products.length === 0) {
+      products = await Product.find({})
+        .sort({ createdAt: -1 })
+        .limit(8)
+        .lean();
+    }
     
     console.log('Featured products found:', products.length);
     

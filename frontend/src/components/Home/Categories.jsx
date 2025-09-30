@@ -6,11 +6,22 @@ import Loading from '../Common/Loading';
 import './Categories.css';
 
 const Categories = () => {
-  const { data: categories, isLoading } = useQuery(
+  const { data: response, isLoading, error } = useQuery(
     'categories',
-    () => api.get('/products/categories').then(res => res.data),
-    { staleTime: 300000 }
+    async () => {
+      const { data } = await api.get('/products/categories');
+      return data;
+    },
+    { 
+      staleTime: 300000,
+      onError: (error) => {
+        console.error('Error fetching categories:', error);
+      }
+    }
   );
+
+  // Extract categories from the response, defaulting to an empty array if not available
+  const categories = response?.categories || [];
 
   const categoryIcons = {
     'Electronics': '📱',
@@ -50,14 +61,31 @@ const Categories = () => {
     return (
       <section className="categories-section">
         <div className="container">
-          <h2>Shop by Category</h2>
+          <div className="section-header">
+            <h2>Shop by Category</h2>
+            <Link to="/categories" className="view-all">View All Categories</Link>
+          </div>
           <Loading size="large" />
         </div>
       </section>
     );
   }
 
-  if (!categories || categories.length === 0) {
+  if (error) {
+    return (
+      <section className="categories-section">
+        <div className="container">
+          <div className="section-header">
+            <h2>Shop by Category</h2>
+          </div>
+          <div className="error-message">Failed to load categories. Please try again later.</div>
+        </div>
+      </section>
+    );
+  }
+
+  // Use the safely checked array
+  if (categories.length === 0) {
     return null;
   }
 
@@ -70,6 +98,7 @@ const Categories = () => {
         </div>
         
         <div className="categories-grid">
+          {/* Now categories is guaranteed to be an array */}
           {categories.slice(0, 12).map((category, index) => (
             <Link 
               key={category.name}

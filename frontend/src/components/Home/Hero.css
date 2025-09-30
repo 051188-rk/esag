@@ -1,162 +1,214 @@
 .hero {
-    position: relative;
-    height: 500px;
-    margin-bottom: 4rem;
+  position: relative;
+  /* Adjusted height for a banner feel */
+  height: 350px; 
+  margin-bottom: 4rem;
+  padding: 0 1rem; 
+}
+
+/* Ensure the slider container itself doesn't have an excessive fixed height */
+.hero .slick-slider {
+  height: 100%;
+}
+
+.p-2 {
+  /* Slick uses inline styles for width, this class ensures a gap between banners */
+  padding: 0.5rem; 
+}
+
+.hero-banner {
+  position: relative;
+  height: 350px;
+  border-radius: 12px;
+  overflow: hidden; 
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.hero-banner:hover {
+  transform: translateY(-5px);
+}
+
+.hero-background {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+/* 1. Inner Shadow from Below */
+.hero-inner-shadow {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 150px; 
+  /* Black gradient going up, ensuring text at the bottom is readable */
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
+  z-index: 2; 
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end; /* Content is bottom-aligned */
+  padding: 2rem;
+  z-index: 3;
+}
+
+.hero-content {
+  color: white;
+  max-width: 80%;
+  text-align: left;
+}
+
+/* 2. Right side images container */
+.hero-right-images {
+  position: absolute;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* Individual image styles */
+.hero-png-1, .hero-png-2 {
+  object-fit: contain;
+  transition: transform 0.5s ease, filter 0.3s ease;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.hero-png-1 {
+  width: 120px;
+  height: auto;
+}
+
+.hero-png-2 {
+  width: 100px;
+  height: auto;
+  opacity: 0.9;
+}
+
+/* Hover effects */
+.hero-banner:hover .hero-png-1 {
+  transform: translateY(-5px) scale(1.1);
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.25));
+}
+
+.hero-banner:hover .hero-png-2 {
+  transform: translateY(5px) scale(1.05);
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.25));
+}
+
+.hero-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.hero-subtitle {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  text-decoration: none;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1f2937;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.hero-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 1);
+}
+
+.cta-arrow {
+  transition: transform 0.3s ease;
+}
+
+.hero-cta:hover .cta-arrow {
+  transform: translateX(4px);
+}
+
+/* Slider customization */
+.hero .slick-dots {
+  bottom: 10px; 
+  z-index: 10;
+}
+
+.hero .slick-dots li button:before {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.hero .slick-dots li.slick-active button:before {
+  color: white;
+}
+
+.hero .slick-prev,
+.hero .slick-next {
+  z-index: 5;
+  top: 50%;
+  margin-top: -15px;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.hero .slick-prev:before,
+.hero .slick-next:before {
+  color: #1f2937;
+  font-size: 18px;
+}
+
+@media (max-width: 768px) {
+  .hero {
+      height: 250px;
   }
-  
-  .hero-slide {
-    position: relative;
-    height: 500px;
-    outline: none;
+  .hero .slick-prev,
+  .hero .slick-next {
+      display: none !important;
   }
-  
-  .hero-background {
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+
+  .hero-png-1, .hero-png-2 {
+      display: none;
   }
-  
-  .hero-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .hero-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 2rem;
-    width: 100%;
-  }
-  
-  .hero-text {
-    max-width: 600px;
-    color: white;
-    text-align: center;
-    animation: fadeInUp 0.8s ease-out;
-  }
-  
+
   .hero-title {
-    font-size: 3.5rem;
-    font-weight: 800;
-    margin-bottom: 1rem;
-    line-height: 1.1;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  }
-  
-  .hero-subtitle {
-    font-size: 1.3rem;
-    margin-bottom: 2.5rem;
-    opacity: 0.95;
-    line-height: 1.4;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-  }
-  
-  .hero-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.95);
-    color: #1f2937;
-    padding: 1rem 2rem;
-    text-decoration: none;
-    border-radius: 50px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  }
-  
-  .hero-cta:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-    background: rgba(255, 255, 255, 1);
-  }
-  
-  .cta-arrow {
-    transition: transform 0.3s ease;
-  }
-  
-  .hero-cta:hover .cta-arrow {
-    transform: translateX(4px);
-  }
-  
-  /* Slider customization */
-  .hero .slick-dots {
-    bottom: 30px;
-  }
-  
-  .hero .slick-dots li button:before {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.6);
-  }
-  
-  .hero .slick-dots li.slick-active button:before {
-    color: white;
-  }
-  
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  @media (max-width: 768px) {
-    .hero {
-      height: 400px;
-    }
-    
-    .hero-slide {
-      height: 400px;
-    }
-    
-    .hero-content {
-      padding: 0 1rem;
-    }
-    
-    .hero-title {
-      font-size: 2.5rem;
-    }
-    
-    .hero-subtitle {
-      font-size: 1.1rem;
-      margin-bottom: 2rem;
-    }
-    
-    .hero-cta {
-      padding: 0.875rem 1.5rem;
-      font-size: 1rem;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .hero {
-      height: 350px;
-    }
-    
-    .hero-slide {
-      height: 350px;
-    }
-    
-    .hero-title {
       font-size: 2rem;
-    }
-    
-    .hero-subtitle {
-      font-size: 1rem;
-    }
   }
-  
+  .hero-overlay {
+      padding: 1rem;
+  }
+  .hero-inner-shadow {
+      height: 100px;
+  }
+}

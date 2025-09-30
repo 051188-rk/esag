@@ -12,13 +12,19 @@
     height: 60px;
     border-radius: 50%;
     border: none;
-    font-size: 2rem;
+    padding: 0;
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     transition: transform 0.3s, background-color 0.3s;
+}
+
+.chatbot-toggle svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
 }
 
 .chatbot-toggle:hover {

@@ -8,81 +8,106 @@ const Hero = () => {
     dots: true,
     infinite: true,
     speed: 500,
-    slidesToShow: 1,
+    // Show 2 slides at a time to create a horizontal scroll for the banners
+    slidesToShow: 1, 
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 4000,
-    fade: true,
-    cssEase: 'linear'
+    responsive: [
+      { breakpoint: 1024, settings: { slidesToShow: 2 } },
+      { breakpoint: 768, settings: { slidesToShow: 1 } },
+      { breakpoint: 480, settings: { slidesToShow: 1 } }
+    ]
   };
 
   const heroSlides = [
     {
       id: 1,
-      image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=500&fit=crop&auto=format',
-      title: 'Summer Sale Spectacular',
-      subtitle: 'Up to 50% off on all categories',
-      buttonText: 'Shop Now',
-      link: '/products',
-      gradient: 'linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(139, 92, 246, 0.8))'
+      image: 'https://images.unsplash.com/photo-1593642702749-bf650b868e8e?w=1200&h=500&fit=crop&q=80&auto=format',
+      png1: '/esag-paper.png',
+      png2: '/sale.png',
+      title: 'Summer Tech Deals',
+      subtitle: 'Up to 50% off on premium gadgets and accessories',
+      buttonText: 'Shop Electronics',
+      link: '/products?category=Electronics',
     },
     {
       id: 2,
-      image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=500&fit=crop&auto=format',
-      title: 'Latest Electronics',
-      subtitle: 'Cutting-edge gadgets and tech accessories',
-      buttonText: 'Explore Tech',
-      link: '/products?category=Electronics',
-      gradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.8), rgba(5, 150, 105, 0.8))'
+      image: 'https://images.unsplash.com/photo-1525547719586-0951664c39c5?w=1200&h=500&fit=crop&q=80&auto=format',
+      png2: '/sale.png',
+      png1: '/esag-paper.png',
+      title: 'Fashion Forward',
+      subtitle: 'New season collection has arrived! Get 20% off.',
+      buttonText: 'Explore Apparel',
+      link: '/products?category=Fashion',
     },
     {
       id: 3,
-      image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=1200&h=500&fit=crop&auto=format',
-      title: 'Fashion Forward',
-      subtitle: 'Trendy clothing for every occasion and season',
-      buttonText: 'Discover Fashion',
-      link: '/products?category=Fashion',
-      gradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.8), rgba(219, 39, 119, 0.8))'
+      image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200&h=500&fit=crop&q=80&auto=format',
+      png2: '/sale.png',
+      png1: '/esag-paper.png',
+      title: 'Footwear Frenzy',
+      subtitle: 'Limited-time offer on all athletic shoes. Buy one, get one 50% off.',
+      buttonText: 'See Shoes',
+      link: '/products?category=Shoes',
     },
     {
       id: 4,
-      image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1200&h=500&fit=crop&auto=format',
-      title: 'Home & Living',
-      subtitle: 'Transform your space with our curated collection',
+      image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1200&h=500&fit=crop&q=80&auto=format',
+      png1: '/esag-paper.png',
+      png2: '/sale.png',
+      title: 'Home Essentials',
+      subtitle: 'Everything you need to spruce up your living space.',
       buttonText: 'Shop Home',
       link: '/products?category=Home',
-      gradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.8), rgba(217, 119, 6, 0.8))'
     }
   ];
 
   return (
     <section className="hero">
-      <Slider {...sliderSettings}>
-        {heroSlides.map(slide => (
-          <div key={slide.id} className="hero-slide">
-            <div 
-              className="hero-background"
-              style={{ backgroundImage: `url(${slide.image})` }}
-            >
-              <div 
-                className="hero-overlay"
-                style={{ background: slide.gradient }}
-              >
-                <div className="hero-content">
-                  <div className="hero-text">
-                    <h1 className="hero-title">{slide.title}</h1>
-                    <p className="hero-subtitle">{slide.subtitle}</p>
-                    <Link to={slide.link} className="hero-cta">
-                      {slide.buttonText}
-                      <span className="cta-arrow">→</span>
-                    </Link>
+      <div className="container">
+        <Slider {...sliderSettings}>
+          {heroSlides.map(slide => (
+            <div key={slide.id} className="p-2">
+              <div className="hero-banner">
+                <div 
+                  className="hero-background"
+                  style={{ backgroundImage: `url(${slide.image})` }}
+                >
+                  {/* Inner Shadow from Below (Z-index 2) */}
+                  <div className="hero-inner-shadow"></div>
+
+                  <div className="hero-overlay">
+                    {/* Overlaid PNGs (Z-index 4) */}
+                    <div className="hero-right-images">
+                      <img 
+                        src={slide.png1} 
+                        alt="Sale" 
+                        className="hero-png-1"
+                        onError={(e) => { e.target.onerror = null; e.target.src = "/sale.png"; }}
+                      />
+                      <img 
+                        src={slide.png2} 
+                        alt="ESAG Logo" 
+                        className="hero-png-2"
+                        onError={(e) => { e.target.onerror = null; e.target.src = "/esag-paper.png"; }}
+                      />
+                    </div>
+                    
+                    <div className="hero-content">
+                      <h2 className="hero-title">{slide.title}</h2>
+                      <p className="hero-subtitle">{slide.subtitle}</p>
+                      <Link to={slide.link} className="hero-cta">
+                        {slide.buttonText} <span className="cta-arrow">→</span>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </Slider>
+          ))}
+        </Slider>
+      </div>
     </section>
   );
 };
