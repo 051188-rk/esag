@@ -7,14 +7,25 @@ const Footer = () => {
     <footer className="footer">
       <div className="container">
         <div className="footer-content">
-          <div className="footer-section">
-            <h3>ShopEase</h3>
-            <p>Your one-stop destination for all shopping needs. Quality products at the best prices.</p>
+          <div className="footer-section about">
+            <div className="footer-logo">
+              <img src="/esag-white.png" alt="ESAG Logo" className="logo" />
+            </div>
+            <p className="location">Chhend Colony, Rourkela, Odisha</p>
+            <p className="tagline">Your trusted partner for quality products</p>
             <div className="social-links">
-              <a href="#" aria-label="Facebook">📘</a>
-              <a href="#" aria-label="Twitter">🐦</a>
-              <a href="#" aria-label="Instagram">📷</a>
-              <a href="#" aria-label="LinkedIn">💼</a>
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                <img src="/facebook.svg" alt="Facebook" />
+              </a>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <img src="/instagram.svg" alt="Instagram" />
+              </a>
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                <img src="/linkedin.svg" alt="LinkedIn" />
+              </a>
+              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                <img src="/youtube.svg" alt="YouTube" />
+              </a>
             </div>
           </div>
 
@@ -22,7 +33,7 @@ const Footer = () => {
             <h4>Quick Links</h4>
             <ul>
               <li><Link to="/">Home</Link></li>
-              <li><Link to="/products">Products</Link></li>
+              <li><Link to="/products">All Products</Link></li>
               <li><Link to="/products?category=Electronics">Electronics</Link></li>
               <li><Link to="/products?category=Fashion">Fashion</Link></li>
               <li><Link to="/products?category=Home">Home & Garden</Link></li>
@@ -32,33 +43,33 @@ const Footer = () => {
           <div className="footer-section">
             <h4>Customer Service</h4>
             <ul>
-              <li><a href="#help">Help Center</a></li>
-              <li><a href="#returns">Returns & Exchanges</a></li>
-              <li><a href="#shipping">Shipping Info</a></li>
-              <li><a href="#track">Track Your Order</a></li>
-              <li><a href="#contact">Contact Us</a></li>
+              <li><Link to="/contact">Contact Us</Link></li>
+              <li><Link to="/faq">FAQs</Link></li>
+              <li><Link to="/shipping">Shipping Policy</Link></li>
+              <li><Link to="/returns">Return Policy</Link></li>
+              <li><Link to="/privacy">Privacy Policy</Link></li>
             </ul>
           </div>
 
-          <div className="footer-section">
-            <h4>Contact Info</h4>
+          <div className="footer-section contact-info">
+            <h4>Contact Us</h4>
             <ul>
-              <li>📞 +91-9876543210</li>
-              <li>✉️ support@shopease.com</li>
-              <li>📍 123 Shopping Street, Mumbai, India</li>
-              <li>🕒 Mon-Sat: 9AM-8PM IST</li>
+              <li className="contact-item">
+                <span>+91-9876543210</span>
+              </li>
+              <li className="contact-item">
+                <span>contact@esag.com</span>
+              </li>
             </ul>
           </div>
         </div>
-
+        
         <div className="footer-bottom">
-          <div className="footer-bottom-content">
-            <p>&copy; 2025 ShopEase. All rights reserved.</p>
-            <div className="footer-links">
-              <a href="#privacy">Privacy Policy</a>
-              <a href="#terms">Terms of Service</a>
-              <a href="#cookies">Cookie Policy</a>
-            </div>
+          <p>&copy; {new Date().getFullYear()} ESAG. All rights reserved.</p>
+          <div className="legal-links">
+            <Link to="/privacy">Privacy Policy</Link>
+            <span>|</span>
+            <Link to="/terms">Terms of Service</Link>
           </div>
         </div>
       </div>

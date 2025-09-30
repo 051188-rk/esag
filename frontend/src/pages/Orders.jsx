@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import Loading from '../components/Common/Loading';
+import LottieAnimation from '../components/Common/LottieAnimation';
 import OrderStatusTracker from '../components/Cart/OrderStatusTracker';
 import './Orders.css';
 
@@ -64,7 +65,14 @@ const Orders = () => {
 
         {!orders || orders.length === 0 ? (
           <div className="no-orders">
+            <div className="no-orders-animation">
+              <LottieAnimation 
+                src="https://lottie.host/bb9778c8-85ec-42e7-b223-0ab2047641c0/rT4DDNPHff.lottie"
+                style={{ width: '300px', height: '300px' }}
+              />
+            </div>
             <h2>No orders yet</h2>
+            <p>Your order history will appear here</p>
             <Link to="/products" className="start-shopping-btn">Start Shopping</Link>
           </div>
         ) : (
